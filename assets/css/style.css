@@ -1,0 +1,397 @@
+/* Estilos Modernos - Tema Negro, Rojo, Amarillo */
+:root {
+    --primary-black: #1a1a1a;
+    --dark-black: #0d0d0d;
+    --light-black: #2d2d2d;
+    --primary-red: #dc2626;
+    --dark-red: #991b1b;
+    --light-red: #ef4444;
+    --primary-yellow: #f59e0b;
+    --dark-yellow: #d97706;
+    --light-yellow: #fbbf24;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --light-gray: #9ca3af;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, var(--primary-black) 0%, var(--dark-black) 100%);
+    color: var(--white);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+/* Navbar Moderna */
+.navbar {
+    background: linear-gradient(135deg, var(--dark-black) 0%, var(--primary-black) 100%);
+    border-bottom: 3px solid var(--primary-yellow);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.navbar-brand {
+    font-weight: 800;
+    font-size: 1.8rem;
+    background: linear-gradient(45deg, var(--primary-yellow), var(--light-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-nav .nav-link {
+    color: var(--white) !important;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    margin: 0 0.2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.navbar-nav .nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -100%;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(45deg, var(--primary-yellow), var(--primary-red));
+    transition: left 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover::before {
+    left: 0;
+}
+
+.navbar-nav .nav-link:hover {
+    background: rgba(220, 38, 38, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Cards Modernas */
+.card {
+    background: linear-gradient(145deg, var(--light-black), var(--primary-black));
+    border: 1px solid var(--primary-red);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(220, 38, 38, 0.4);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    border-bottom: 2px solid var(--primary-yellow);
+    border-radius: 15px 15px 0 0;
+    font-weight: 700;
+    text-align: center;
+    padding: 1.2rem;
+}
+
+/* Botones Modernos */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--primary-yellow), var(--dark-yellow));
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--dark-yellow), var(--primary-yellow));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #991b1b, #dc2626);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #4b5563, #6b7280);
+    transform: translateY(-2px);
+}
+
+/* Tablas Modernas */
+.table {
+    background: var(--light-black);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.table-dark {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    border: none;
+}
+
+.table th {
+    border: none;
+    font-weight: 700;
+    padding: 1.2rem;
+    text-align: center;
+}
+
+.table td {
+    border-color: var(--gray);
+    padding: 1rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(220, 38, 38, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background: linear-gradient(90deg, rgba(220, 38, 38, 0.1), rgba(245, 158, 11, 0.1));
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+/* Badges Modernos */
+.badge {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* Formularios Modernos */
+.form-control {
+    background: var(--light-black);
+    border: 2px solid var(--gray);
+    border-radius: 10px;
+    color: var(--white);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background: var(--light-black);
+    border-color: var(--primary-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    color: var(--white);
+    transform: scale(1.02);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--light-yellow);
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: var(--light-gray);
+}
+
+/* Footer Moderno */
+footer {
+    background: linear-gradient(135deg, var(--dark-black), var(--primary-black));
+    border-top: 3px solid var(--primary-yellow);
+    margin-top: 3rem;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Dashboard Específico */
+.dashboard-card {
+    background: linear-gradient(145deg, var(--light-black), var(--primary-black));
+    border: 2px solid;
+    border-image: linear-gradient(45deg, var(--primary-red), var(--primary-yellow)) 1;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(220, 38, 38, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+}
+
+.dashboard-card:hover::before {
+    transform: rotate(45deg) translate(50%, 50%);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3);
+}
+
+.dashboard-number {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, var(--primary-yellow), var(--primary-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 1rem 0;
+}
+
+.dashboard-title {
+    color: var(--light-yellow);
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.4rem;
+    }
+    
+    .dashboard-number {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin: 0.5rem;
+    }
+}
+
+/* Efectos de partículas para el fondo */
+.bg-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    background: var(--primary-yellow);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float 6s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg); 
+    }
+    50% { 
+        transform: translateY(-20px) rotate(180deg); 
+    }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--primary-red), var(--primary-yellow));
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(var(--primary-yellow), var(--primary-red));
+}
