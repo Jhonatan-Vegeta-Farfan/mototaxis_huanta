@@ -32,6 +32,82 @@ class Mototaxi {
         return $stmt;
     }
 
+    // MÉTODO DE BÚSQUEDA AGREGADO
+    public function search($keywords) {
+        $query = "SELECT m.*, e.razon_social as empresa 
+                 FROM " . $this->table_name . " m 
+                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                 WHERE m.numero_asignado LIKE ? OR m.nombre_completo LIKE ? OR m.dni LIKE ?
+                 ORDER BY m.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Agregar comodines para la búsqueda
+        $keywords = "%{$keywords}%";
+        $stmt->bindParam(1, $keywords);
+        $stmt->bindParam(2, $keywords);
+        $stmt->bindParam(3, $keywords);
+        
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // MÉTODO DE BÚSQUEDA AVANZADA
+    public function advancedSearch($numero_asignado = null, $nombre_completo = null, $dni = null, $placa_rodaje = null) {
+        $query = "SELECT m.*, e.razon_social as empresa 
+                 FROM " . $this->table_name . " m 
+                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                 WHERE 1=1";
+        
+        $params = array();
+        
+        if (!empty($numero_asignado)) {
+            $query .= " AND m.numero_asignado LIKE ?";
+            $params[] = "%{$numero_asignado}%";
+        }
+        
+        if (!empty($nombre_completo)) {
+            $query .= " AND m.nombre_completo LIKE ?";
+            $params[] = "%{$nombre_completo}%";
+        }
+        
+        if (!empty($dni)) {
+            $query .= " AND m.dni LIKE ?";
+            $params[] = "%{$dni}%";
+        }
+        
+        if (!empty($placa_rodaje)) {
+            $query .= " AND m.placa_rodaje LIKE ?";
+            $params[] = "%{$placa_rodaje}%";
+        }
+        
+        $query .= " ORDER BY m.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters dinámicamente
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(($key + 1), $value);
+        }
+        
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // MÉTODO PARA FILTRAR POR EMPRESA
+    public function getByEmpresa($empresa_id) {
+        $query = "SELECT m.*, e.razon_social as empresa 
+                 FROM " . $this->table_name . " m 
+                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                 WHERE m.id_empresa = ?
+                 ORDER BY m.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        return $stmt;
+    }
+
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET numero_asignado=:numero_asignado, nombre_completo=:nombre_completo, 

@@ -23,6 +23,36 @@ class CountRequest {
         return $stmt;
     }
 
+    // MÉTODO PARA FILTRAR POR CLIENTE
+    public function getByClient($client_id) {
+        $query = "SELECT cr.*, t.token, c.razon_social 
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE t.id_client_api = ?
+                 ORDER BY cr.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // MÉTODO PARA FILTRAR POR TOKEN
+    public function getByToken($token_id) {
+        $query = "SELECT cr.*, t.token, c.razon_social 
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE cr.id_token_api = ?
+                 ORDER BY cr.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token_id);
+        $stmt->execute();
+        return $stmt;
+    }
+
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET id_token_api=:id_token_api, tipo=:tipo, fecha=:fecha";

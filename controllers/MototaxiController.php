@@ -7,7 +7,32 @@ class MototaxiController {
     }
 
     public function index() {
-        $stmt = $this->model->read();
+        // Verificar si hay búsqueda
+        $search_keywords = isset($_GET['search']) ? $_GET['search'] : '';
+        $advanced_search = isset($_GET['advanced_search']) ? true : false;
+        $empresa_id = isset($_GET['empresa_id']) ? $_GET['empresa_id'] : '';
+        
+        if (!empty($search_keywords)) {
+            if ($advanced_search) {
+                // Búsqueda avanzada
+                $numero_asignado = isset($_GET['numero_asignado']) ? $_GET['numero_asignado'] : '';
+                $nombre_completo = isset($_GET['nombre_completo']) ? $_GET['nombre_completo'] : '';
+                $dni = isset($_GET['dni']) ? $_GET['dni'] : '';
+                $placa_rodaje = isset($_GET['placa_rodaje']) ? $_GET['placa_rodaje'] : '';
+                
+                $stmt = $this->model->advancedSearch($numero_asignado, $nombre_completo, $dni, $placa_rodaje);
+            } else {
+                // Búsqueda simple
+                $stmt = $this->model->search($search_keywords);
+            }
+        } else if (!empty($empresa_id)) {
+            // Filtrar por empresa específica
+            $stmt = $this->model->getByEmpresa($empresa_id);
+        } else {
+            // Mostrar todos los registros
+            $stmt = $this->model->read();
+        }
+        
         include_once 'views/mototaxis/index.php';
     }
 
@@ -73,6 +98,19 @@ class MototaxiController {
             header("Location: index.php?controller=mototaxis&action=index");
             exit();
         }
+    }
+
+    // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
+    public function search() {
+        $search_keywords = isset($_GET['q']) ? $_GET['q'] : '';
+        
+        if (!empty($search_keywords)) {
+            $stmt = $this->model->search($search_keywords);
+        } else {
+            $stmt = $this->model->read();
+        }
+        
+        include_once 'views/mototaxis/index.php';
     }
 }
 ?>

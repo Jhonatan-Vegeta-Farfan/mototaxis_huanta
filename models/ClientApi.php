@@ -22,6 +22,54 @@ class ClientApi {
         return $stmt;
     }
 
+    // MÉTODO DE BÚSQUEDA SIMPLE AGREGADO
+    public function search($keywords) {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                 WHERE (ruc LIKE ? OR razon_social LIKE ?) AND estado = 1
+                 ORDER BY id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Agregar comodines para la búsqueda
+        $keywords = "%{$keywords}%";
+        $stmt->bindParam(1, $keywords);
+        $stmt->bindParam(2, $keywords);
+        
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // MÉTODO DE BÚSQUEDA AVANZADA
+    public function advancedSearch($ruc = null, $razon_social = null, $estado = null) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
+        
+        $params = array();
+        
+        if (!empty($ruc)) {
+            $query .= " AND ruc LIKE ?";
+            $params[] = "%{$ruc}%";
+        }
+        
+        if (!empty($razon_social)) {
+            $query .= " AND razon_social LIKE ?";
+            $params[] = "%{$razon_social}%";
+        }
+        
+
+        
+        $query .= " ORDER BY id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters dinámicamente
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(($key + 1), $value);
+        }
+        
+        $stmt->execute();
+        return $stmt;
+    }
+
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 

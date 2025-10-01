@@ -7,7 +7,27 @@ class EmpresaController {
     }
 
     public function index() {
-        $stmt = $this->model->read();
+        // Verificar si hay búsqueda
+        $search_keywords = isset($_GET['search']) ? $_GET['search'] : '';
+        $advanced_search = isset($_GET['advanced_search']) ? true : false;
+        
+        if (!empty($search_keywords)) {
+            if ($advanced_search) {
+                // Búsqueda avanzada
+                $ruc = isset($_GET['ruc']) ? $_GET['ruc'] : '';
+                $razon_social = isset($_GET['razon_social']) ? $_GET['razon_social'] : '';
+                $representante_legal = isset($_GET['representante_legal']) ? $_GET['representante_legal'] : '';
+                
+                $stmt = $this->model->advancedSearch($ruc, $razon_social, $representante_legal);
+            } else {
+                // Búsqueda simple
+                $stmt = $this->model->search($search_keywords);
+            }
+        } else {
+            // Mostrar todos los registros
+            $stmt = $this->model->read();
+        }
+        
         include_once 'views/empresas/index.php';
     }
 
@@ -50,6 +70,19 @@ class EmpresaController {
             header("Location: index.php?controller=empresas&action=index");
             exit();
         }
+    }
+
+    // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
+    public function search() {
+        $search_keywords = isset($_GET['q']) ? $_GET['q'] : '';
+        
+        if (!empty($search_keywords)) {
+            $stmt = $this->model->search($search_keywords);
+        } else {
+            $stmt = $this->model->read();
+        }
+        
+        include_once 'views/empresas/index.php';
     }
 }
 ?>
