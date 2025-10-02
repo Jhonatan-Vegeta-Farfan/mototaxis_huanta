@@ -2,6 +2,12 @@
 // Configuración inicial
 session_start();
 
+// Verificar si el usuario está logueado
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("Location: login.php");
+    exit;
+}
+
 // Incluir modelos
 require_once 'models/Database.php';
 require_once 'models/ClientApi.php';
@@ -48,8 +54,19 @@ if (empty($controller)) {
         <!-- Header con gradiente -->
         <div class="urban-header">
             <div class="urban-title">
-                <h1>MUNICIPALIDAD PROVINCIAL DE HUANTA</h1>
-                <p class="urban-subtitle">Sistema de Gestión de Mototaxis Huanta</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1>MUNICIPALIDAD PROVINCIAL DE HUANTA</h1>
+                        <p class="urban-subtitle">Sistema de Gestión de Mototaxis Huanta</p>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-light">Bienvenido, <strong class="text-warning"><?php echo $_SESSION['username']; ?></strong></small>
+                        <br>
+                        <a href="logout.php" class="btn btn-sm btn-outline-light mt-1">
+                            <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="urban-waves">
                 <div class="wave wave-1"></div>
@@ -229,31 +246,25 @@ if (empty($controller)) {
     }
 
     .urban-title {
-        text-align: center;
+        text-align: left;
         position: relative;
         z-index: 2;
     }
 
-    .urban-icon {
-        font-size: 3rem;
-        color: #fff;
-        margin-bottom: 15px;
-        text-shadow: 0 0 20px rgba(255,255,255,0.5);
-    }
-
     .urban-title h1 {
         color: #fff;
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         font-weight: 800;
         margin-bottom: 10px;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
     }
 
     .urban-subtitle {
         color: rgba(255,255,255,0.8);
         font-size: 1.1rem;
         font-weight: 300;
+        margin-bottom: 0;
     }
 
     .urban-waves {
@@ -527,11 +538,25 @@ if (empty($controller)) {
         }
         
         .urban-title h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
         }
         
         .stat-card {
             padding: 20px;
+        }
+        
+        .urban-header {
+            padding: 30px 20px;
+        }
+        
+        .urban-title .d-flex {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .urban-title .text-end {
+            text-align: center !important;
+            margin-top: 15px;
         }
     }
     </style>

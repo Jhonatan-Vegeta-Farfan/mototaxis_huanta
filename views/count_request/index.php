@@ -11,7 +11,7 @@
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
     // Obtener información del cliente para mostrar
-    $clientModel = new ClientApi($this->model->conn);
+    $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
     if ($clientModel->readOne()) {
@@ -32,11 +32,11 @@
 <?php elseif (isset($_GET['token_id']) && !empty($_GET['token_id'])): ?>
 <?php
     // Obtener información del token para mostrar
-    $tokenModel = new TokenApi($this->model->conn);
+    $tokenModel = new TokenApi($db_connection);
     $tokenModel->id = $_GET['token_id'];
     $tokenInfo = '';
     if ($tokenModel->readOne()) {
-        $clientModel = new ClientApi($this->model->conn);
+        $clientModel = new ClientApi($db_connection);
         $clientModel->id = $tokenModel->id_client_api;
         if ($clientModel->readOne()) {
             $tokenInfo = 'Token: ' . substr($tokenModel->token, 0, 20) . '... - Cliente: ' . $clientModel->razon_social;
@@ -88,7 +88,16 @@
                             <strong class="text-warning"><?php echo $row['razon_social']; ?></strong>
                             <br>
                             <small>
-                                <a href="index.php?controller=count_request&action=index&client_id=<?php echo $this->getClientIdFromToken($row['id_token_api']); ?>" 
+                                <?php
+                                // Obtener client_id desde token_id
+                                $tokenModel = new TokenApi($db_connection);
+                                $tokenModel->id = $row['id_token_api'];
+                                $client_id_from_token = '';
+                                if ($tokenModel->readOne()) {
+                                    $client_id_from_token = $tokenModel->id_client_api;
+                                }
+                                ?>
+                                <a href="index.php?controller=count_request&action=index&client_id=<?php echo $client_id_from_token; ?>" 
                                    class="text-info">
                                     <i class="fas fa-filter me-1"></i>Filtrar por este cliente
                                 </a>
@@ -275,15 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
-
-// Función helper para obtener client ID desde token ID (se necesita implementar en el modelo)
-function getClientIdFromToken(tokenId) {
-    // Esta función debería ser implementada en el backend
-    // Por ahora retornamos el token ID como placeholder
-    return tokenId;
-}
 </script>
-
-
 
 <?php include_once 'views/layouts/footer.php'; ?>

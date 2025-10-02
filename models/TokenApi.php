@@ -24,6 +24,20 @@ class TokenApi {
         return $stmt;
     }
 
+    // MÉTODO GET BY CLIENT - AGREGADO
+    public function getByClient($client_id) {
+        $query = "SELECT t.*, c.razon_social 
+                 FROM " . $this->table_name . " t 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE t.id_client_api = ? AND t.estado = 1
+                 ORDER BY t.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        return $stmt;
+    }
+
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET id_client_api=:id_client_api, token=:token, 

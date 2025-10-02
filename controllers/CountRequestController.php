@@ -24,28 +24,21 @@ class CountRequestController {
             $stmt = $this->model->read();
         }
         
+        // Pasar la conexión a la vista
+        $db_connection = $this->db;
         include_once 'views/count_request/index.php';
     }
 
     public function create() {
         $tokens = $this->model->getTokens();
-        
-        if($_POST) {
-            $this->model->id_token_api = $_POST['id_token_api'];
-            $this->model->tipo = $_POST['tipo'];
-            $this->model->fecha = $_POST['fecha'];
-
-            if($this->model->create()) {
-                header("Location: index.php?controller=count_request&action=index");
-                exit();
-            }
-        }
+        $db_connection = $this->db;
         include_once 'views/count_request/create.php';
     }
 
     public function edit() {
         $this->model->id = $_GET['id'];
         $tokens = $this->model->getTokens();
+        $db_connection = $this->db;
         
         if($_POST) {
             $this->model->id = $_POST['id'];
@@ -71,7 +64,7 @@ class CountRequestController {
         }
     }
 
-    // NUEVA FUNCIÓN HELPER PARA LA VISTA
+    // FUNCIÓN HELPER PARA LA VISTA
     public function getClientIdFromToken($tokenId) {
         $tokenModel = new TokenApi($this->db);
         $tokenModel->id = $tokenId;

@@ -1,18 +1,33 @@
 <?php
 class TokenApiController {
     private $model;
+    private $db;
 
     public function __construct($db) {
         $this->model = new TokenApi($db);
+        $this->db = $db;
     }
 
     public function index() {
-        $stmt = $this->model->read();
+        // Verificar si hay filtro por cliente
+        $client_id = isset($_GET['client_id']) ? $_GET['client_id'] : '';
+        
+        if (!empty($client_id)) {
+            // Filtrar por cliente específico
+            $stmt = $this->model->getByClient($client_id);
+        } else {
+            // Mostrar todos los registros
+            $stmt = $this->model->read();
+        }
+        
+        // Pasar la conexión a la vista
+        $db_connection = $this->db;
         include_once 'views/tokens_api/index.php';
     }
 
     public function create() {
         $clientes = $this->model->getClientes();
+        $db_connection = $this->db;
         
         if($_POST) {
             $this->model->id_client_api = $_POST['id_client_api'];
@@ -31,6 +46,7 @@ class TokenApiController {
     public function edit() {
         $this->model->id = $_GET['id'];
         $clientes = $this->model->getClientes();
+        $db_connection = $this->db;
         
         if($_POST) {
             $this->model->id = $_POST['id'];

@@ -11,7 +11,7 @@
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
     // Obtener información del cliente para mostrar
-    $clientModel = new ClientApi($this->model->conn);
+    $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
     if ($clientModel->readOne()) {
@@ -72,7 +72,7 @@
                         <td>
                             <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 20) . '...'; ?></code>
                             <br>
-                            <small class="text-muted">ID: <?php echo $row['id_client_api']; ?></small>
+                            <small class="text-muted">ID Cliente: <?php echo $row['id_client_api']; ?></small>
                         </td>
                         <td>
                             <span class="badge bg-secondary"><?php echo $row['fecha_registro']; ?></span>

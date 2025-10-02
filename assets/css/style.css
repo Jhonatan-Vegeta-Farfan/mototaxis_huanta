@@ -214,12 +214,20 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Badges Modernos */
+/* Badges Modernos - SOLO ESTA PARTE FUE MODIFICADA */
 .badge {
     border-radius: 20px;
     padding: 0.5rem 1rem;
     font-weight: 600;
     font-size: 0.8rem;
+}
+
+/* Esta es la única sección que se modificó - Badges de colores dinámicos */
+.badge[style*="background-color"] {
+    min-width: 80px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 .bg-success {
@@ -395,6 +403,7 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(var(--primary-yellow), var(--primary-red));
 }
+
 /* Agregar al final del archivo CSS existente */
 
 /* Estilos para el sistema de búsqueda */
@@ -421,10 +430,12 @@ footer {
     border-radius: 0 10px 10px 0;
 }
 
-/* Estilos para badges de colores */
+/* Estilos para badges de colores - ESTA ES LA PARTE CLAVE MODIFICADA */
 .badge[style*="background-color"] {
     min-width: 80px;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 /* Estilos para el modal */
