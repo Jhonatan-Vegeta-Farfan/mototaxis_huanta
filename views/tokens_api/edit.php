@@ -7,6 +7,14 @@
                 <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Token API</h4>
             </div>
             <div class="card-body">
+                <?php if (isset($error)): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <?php echo $error; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+
                 <form method="POST" action="">
                     <input type="hidden" name="id" value="<?php echo $this->model->id; ?>">
                     
@@ -27,9 +35,7 @@
                         <label for="token" class="form-label">Token</label>
                         <input type="text" class="form-control" id="token" name="token" 
                                value="<?php echo $this->model->token; ?>" required>
-                        <small class="form-text text-muted">
-                            Formato: [Código único]-[Identificador cliente]-[Número secuencial]
-                        </small>
+                        <div class="form-text">Token único de autenticación</div>
                     </div>
                     
                     <div class="row">
@@ -52,7 +58,7 @@
                             <i class="fas fa-arrow-left me-1"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Actualizar
+                            <i class="fas fa-save me-1"></i> Actualizar Token
                         </button>
                     </div>
                 </form>
@@ -60,5 +66,12 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo
+    document.getElementById('id_client_api').focus();
+});
+</script>
 
 <?php include_once 'views/layouts/footer.php'; ?>

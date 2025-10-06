@@ -15,6 +15,9 @@ class ClientApi {
         $this->conn = $db;
     }
 
+    /**
+     * Leer todos los clientes API activos
+     */
     public function read() {
         $query = "SELECT * FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id DESC";
         $stmt = $this->conn->prepare($query);
@@ -22,6 +25,9 @@ class ClientApi {
         return $stmt;
     }
 
+    /**
+     * Búsqueda simple por RUC o Razón Social
+     */
     public function search($keywords) {
         $query = "SELECT * FROM " . $this->table_name . " 
                  WHERE (ruc LIKE ? OR razon_social LIKE ?) AND estado = 1
@@ -37,6 +43,9 @@ class ClientApi {
         return $stmt;
     }
 
+    /**
+     * Búsqueda avanzada con múltiples criterios
+     */
     public function advancedSearch($ruc = null, $razon_social = null, $estado = null) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
         
@@ -71,6 +80,9 @@ class ClientApi {
         return $stmt;
     }
 
+    /**
+     * Crear nuevo cliente API
+     */
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
@@ -98,6 +110,9 @@ class ClientApi {
         return false;
     }
 
+    /**
+     * Actualizar cliente API existente
+     */
     public function update() {
         $query = "UPDATE " . $this->table_name . " 
                  SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
@@ -128,6 +143,9 @@ class ClientApi {
         return false;
     }
 
+    /**
+     * Eliminar cliente API (eliminación lógica)
+     */
     public function delete() {
         $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
         $stmt = $this->conn->prepare($query);
@@ -139,6 +157,9 @@ class ClientApi {
         return false;
     }
 
+    /**
+     * Leer un cliente API específico por ID
+     */
     public function readOne() {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
@@ -159,6 +180,9 @@ class ClientApi {
         return false;
     }
 
+    /**
+     * Contar tokens activos del cliente
+     */
     public function countTokens($client_id) {
         $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
         $stmt = $this->conn->prepare($query);
@@ -166,36 +190,20 @@ class ClientApi {
         $stmt->execute();
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] + 1;
+        return $row['total'];
     }
 
-    // NUEVO: Obtener estadísticas del cliente
-    public function getStats($client_id) {
-        $stats = [
-            'total_tokens' => 0,
-            'total_requests' => 0
-        ];
+    /**
+     * Obtener información del cliente para generar token
+     */
+    public function getClientInfo($client_id) {
+        $query = "SELECT razon_social FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
         
-        // Contar tokens
-        $query_tokens = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
-        $stmt_tokens = $this->conn->prepare($query_tokens);
-        $stmt_tokens->bindParam(1, $client_id);
-        $stmt_tokens->execute();
-        $row_tokens = $stmt_tokens->fetch(PDO::FETCH_ASSOC);
-        $stats['total_tokens'] = $row_tokens['total'];
-        
-        // Contar requests
-        $query_requests = "SELECT COUNT(*) as total 
-                          FROM count_request cr 
-                          JOIN tokens_api t ON cr.id_token_api = t.id 
-                          WHERE t.id_client_api = ?";
-        $stmt_requests = $this->conn->prepare($query_requests);
-        $stmt_requests->bindParam(1, $client_id);
-        $stmt_requests->execute();
-        $row_requests = $stmt_requests->fetch(PDO::FETCH_ASSOC);
-        $stats['total_requests'] = $row_requests['total'];
-        
-        return $stats;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['razon_social'] : false;
     }
 }
 ?>

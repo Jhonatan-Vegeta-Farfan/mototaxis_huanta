@@ -10,6 +10,7 @@
 <!-- Indicador de Filtro por Cliente -->
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
+    // Obtener información del cliente para mostrar
     $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
@@ -48,7 +49,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
-                        <th>Token Generado</th>
+                        <th>Token</th>
                         <th>Fecha Registro</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -69,7 +70,7 @@
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo $row['token']; ?></code>
+                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 20) . '...'; ?></code>
                             <br>
                             <small class="text-muted">ID Cliente: <?php echo $row['id_client_api']; ?></small>
                         </td>

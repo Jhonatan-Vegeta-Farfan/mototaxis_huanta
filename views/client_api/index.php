@@ -7,7 +7,7 @@
     </a>
 </div>
 
-<!-- Sistema de Búsqueda Mejorado -->
+<!-- Sistema de Búsqueda -->
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
         <h4 class="mb-0"><i class="fas fa-search me-2"></i>Sistema de Búsqueda</h4>
@@ -121,9 +121,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): 
-                        $clientStats = $this->model->getStats($row['id']);
-                    ?>
+                    <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
                     <tr>
                         <td><?php echo $row['id']; ?></td>
                         <td>
@@ -131,11 +129,6 @@
                         </td>
                         <td>
                             <strong class="text-warning"><?php echo $row['razon_social']; ?></strong>
-                            <br>
-                            <small class="text-muted">
-                                <i class="fas fa-key me-1"></i><?php echo $clientStats['total_tokens']; ?> tokens
-                                <i class="fas fa-chart-bar ms-2 me-1"></i><?php echo $clientStats['total_requests']; ?> requests
-                            </small>
                         </td>
                         <td><?php echo $row['telefono'] ?: '<span class="text-muted">No especificado</span>'; ?></td>
                         <td><?php echo $row['correo'] ?: '<span class="text-muted">No especificado</span>'; ?></td>
@@ -168,18 +161,12 @@
                                         data-correo="<?php echo $row['correo']; ?>"
                                         data-fecha="<?php echo $row['fecha_registro']; ?>"
                                         data-estado="<?php echo $row['estado']; ?>"
-                                        data-tokens="<?php echo $clientStats['total_tokens']; ?>"
-                                        data-requests="<?php echo $clientStats['total_requests']; ?>"
                                         data-bs-toggle="tooltip" title="Ver Detalles">
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <a href="index.php?controller=tokens_api&action=index&client_id=<?php echo $row['id']; ?>" 
                                    class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Ver Tokens">
                                     <i class="fas fa-key"></i>
-                                </a>
-                                <a href="index.php?controller=count_request&action=index&client_id=<?php echo $row['id']; ?>" 
-                                   class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" title="Ver Requests">
-                                    <i class="fas fa-chart-bar"></i>
                                 </a>
                             </div>
                         </td>
@@ -201,7 +188,7 @@
     </div>
 </div>
 
-<!-- Modal para Detalles Mejorado -->
+<!-- Modal para Detalles -->
 <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -249,21 +236,6 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Estadísticas</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Total Tokens:</th>
-                                <td id="modal-tokens" class="fw-bold text-primary"></td>
-                            </tr>
-                            <tr>
-                                <th>Total Requests:</th>
-                                <td id="modal-requests" class="fw-bold text-success"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
                     <div class="col-12">
                         <h6 class="text-warning">Acciones Disponibles</h6>
                         <div class="d-grid gap-2 d-md-flex">
@@ -300,8 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-telefono').textContent = this.getAttribute('data-telefono') || 'No especificado';
             document.getElementById('modal-correo').textContent = this.getAttribute('data-correo') || 'No especificado';
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
-            document.getElementById('modal-tokens').textContent = this.getAttribute('data-tokens');
-            document.getElementById('modal-requests').textContent = this.getAttribute('data-requests');
             
             const estado = this.getAttribute('data-estado');
             const estadoText = estado == '1' ? 'Activo' : 'Inactivo';

@@ -13,8 +13,11 @@ class TokenApi {
         $this->conn = $db;
     }
 
+    /**
+     * Leer todos los tokens activos
+     */
     public function read() {
-        $query = "SELECT t.*, c.razon_social, c.ruc 
+        $query = "SELECT t.*, c.razon_social 
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.estado = 1 
@@ -24,8 +27,11 @@ class TokenApi {
         return $stmt;
     }
 
+    /**
+     * Obtener tokens por cliente específico
+     */
     public function getByClient($client_id) {
-        $query = "SELECT t.*, c.razon_social, c.ruc 
+        $query = "SELECT t.*, c.razon_social 
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ? AND t.estado = 1
@@ -37,32 +43,39 @@ class TokenApi {
         return $stmt;
     }
 
+    /**
+     * Generar token automático único para el cliente
+     */
     public function generateToken($client_id) {
         $clientModel = new ClientApi($this->conn);
-        $clientModel->id = $client_id;
+        $client_info = $clientModel->getClientInfo($client_id);
         
-        if ($clientModel->readOne()) {
-            $token_count = $clientModel->countTokens($client_id);
+        if ($client_info) {
+            $token_count = $clientModel->countTokens($client_id) + 1;
             
-            // Generar token único
+            // Generar parte aleatoria del token
             $base_token = bin2hex(random_bytes(16));
             
             // Crear identificador del cliente (primeras 3 letras sin espacios)
-            $client_identifier = substr($clientModel->razon_social, 0, 3);
+            $client_identifier = substr($client_info, 0, 3);
             $client_identifier = preg_replace('/[^a-zA-Z0-9]/', '', $client_identifier);
             $client_identifier = strtoupper($client_identifier);
             
-            // Si no hay suficientes letras, usar RUC
+            // Si el identificador está vacío, usar "CLI"
             if (empty($client_identifier)) {
-                $client_identifier = substr($clientModel->ruc, 0, 3);
+                $client_identifier = "CLI";
             }
             
+            // Formato: base_token-IDENTIFICADOR-NUMERO
             return $base_token . '-' . $client_identifier . '-' . $token_count;
         }
         
         return false;
     }
 
+    /**
+     * Crear nuevo token automáticamente
+     */
     public function create() {
         // Validar que el cliente existe
         $clientModel = new ClientApi($this->conn);
@@ -101,6 +114,9 @@ class TokenApi {
         return false;
     }
 
+    /**
+     * Actualizar token existente
+     */
     public function update() {
         $query = "UPDATE " . $this->table_name . " 
                  SET id_client_api=:id_client_api, token=:token, 
@@ -127,6 +143,9 @@ class TokenApi {
         return false;
     }
 
+    /**
+     * Eliminar token (eliminación lógica)
+     */
     public function delete() {
         $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
         $stmt = $this->conn->prepare($query);
@@ -138,11 +157,11 @@ class TokenApi {
         return false;
     }
 
+    /**
+     * Leer un token específico por ID
+     */
     public function readOne() {
-        $query = "SELECT t.*, c.razon_social, c.ruc 
-                 FROM " . $this->table_name . " t 
-                 LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.id = ? LIMIT 0,1";
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         $stmt->execute();
@@ -159,14 +178,19 @@ class TokenApi {
         return false;
     }
 
+    /**
+     * Obtener lista de clientes activos para dropdown
+     */
     public function getClientes() {
-        $query = "SELECT id, razon_social, ruc FROM client_api WHERE estado = 1 ORDER BY razon_social";
+        $query = "SELECT id, razon_social FROM client_api WHERE estado = 1 ORDER BY razon_social";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
 
-    // NUEVO: Verificar si token ya existe
+    /**
+     * Verificar si un token ya existe
+     */
     public function tokenExists($token) {
         $query = "SELECT id FROM " . $this->table_name . " WHERE token = ? AND estado = 1";
         $stmt = $this->conn->prepare($query);
@@ -174,19 +198,6 @@ class TokenApi {
         $stmt->execute();
         
         return $stmt->rowCount() > 0;
-    }
-
-    // NUEVO: Obtener estadísticas del token
-    public function getStats($token_id) {
-        $query = "SELECT COUNT(*) as total_requests 
-                 FROM count_request 
-                 WHERE id_token_api = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $token_id);
-        $stmt->execute();
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total_requests'];
     }
 }
 ?>

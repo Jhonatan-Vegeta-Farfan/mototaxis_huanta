@@ -10,6 +10,7 @@
 <!-- Indicador de Filtro -->
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
+    // Obtener información del cliente para mostrar
     $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
@@ -30,6 +31,7 @@
 </div>
 <?php elseif (isset($_GET['token_id']) && !empty($_GET['token_id'])): ?>
 <?php
+    // Obtener información del token para mostrar
     $tokenModel = new TokenApi($db_connection);
     $tokenModel->id = $_GET['token_id'];
     $tokenInfo = '';
@@ -37,7 +39,7 @@
         $clientModel = new ClientApi($db_connection);
         $clientModel->id = $tokenModel->id_client_api;
         if ($clientModel->readOne()) {
-            $tokenInfo = 'Token: ' . $tokenModel->token . ' - Cliente: ' . $clientModel->razon_social;
+            $tokenInfo = 'Token: ' . substr($tokenModel->token, 0, 20) . '... - Cliente: ' . $clientModel->razon_social;
         }
     }
 ?>
@@ -93,7 +95,7 @@
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo $row['token']; ?></code>
+                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 15) . '...'; ?></code>
                             <br>
                             <small>
                                 <a href="index.php?controller=count_request&action=index&token_id=<?php echo $row['id_token_api']; ?>" 

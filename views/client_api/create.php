@@ -7,18 +7,10 @@
                 <h4 class="mb-0"><i class="fas fa-plus me-2"></i>Nuevo Cliente API</h4>
             </div>
             <div class="card-body">
-                <?php if (isset($error) && $error): ?>
+                <?php if (isset($error)): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <?php echo $error; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php endif; ?>
-                
-                <?php if (isset($success) && $success): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <?php echo $success; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 <?php endif; ?>
@@ -26,18 +18,15 @@
                 <form method="POST" action="">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="ruc" class="form-label">RUC <span class="text-danger">*</span></label>
+                            <label for="ruc" class="form-label">RUC *</label>
                             <input type="text" class="form-control" id="ruc" name="ruc" required 
-                                   maxlength="11" pattern="[0-9]{11}" 
-                                   placeholder="11 dígitos numéricos"
-                                   value="<?php echo $_POST['ruc'] ?? ''; ?>">
-                            <div class="form-text">Debe contener exactamente 11 dígitos numéricos</div>
+                                   maxlength="11" pattern="[0-9]{11}" placeholder="11 dígitos">
+                            <div class="form-text">Ingrese 11 dígitos numéricos</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="razon_social" class="form-label">Razón Social <span class="text-danger">*</span></label>
+                            <label for="razon_social" class="form-label">Razón Social *</label>
                             <input type="text" class="form-control" id="razon_social" name="razon_social" required
-                                   placeholder="Nombre completo de la empresa"
-                                   value="<?php echo $_POST['razon_social'] ?? ''; ?>">
+                                   placeholder="Nombre legal de la empresa">
                         </div>
                     </div>
                     
@@ -45,26 +34,19 @@
                         <div class="col-md-6 mb-3">
                             <label for="telefono" class="form-label">Teléfono</label>
                             <input type="tel" class="form-control" id="telefono" name="telefono"
-                                   placeholder="Ej: 987654321"
-                                   value="<?php echo $_POST['telefono'] ?? ''; ?>">
+                                   placeholder="Número de contacto">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="correo" class="form-label">Correo Electrónico</label>
                             <input type="email" class="form-control" id="correo" name="correo"
-                                   placeholder="ejemplo@empresa.com"
-                                   value="<?php echo $_POST['correo'] ?? ''; ?>">
+                                   placeholder="correo@empresa.com">
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="fecha_registro" class="form-label">Fecha de Registro <span class="text-danger">*</span></label>
+                        <label for="fecha_registro" class="form-label">Fecha de Registro *</label>
                         <input type="date" class="form-control" id="fecha_registro" name="fecha_registro" required
-                               value="<?php echo $_POST['fecha_registro'] ?? date('Y-m-d'); ?>">
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Información:</strong> Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+                               value="<?php echo date('Y-m-d'); ?>">
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -83,16 +65,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Validación de RUC en tiempo real
+    // Validación de RUC
     const rucInput = document.getElementById('ruc');
-    if (rucInput) {
-        rucInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            if (this.value.length > 11) {
-                this.value = this.value.slice(0, 11);
-            }
-        });
-    }
+    rucInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value.length > 11) {
+            this.value = this.value.slice(0, 11);
+        }
+    });
 
     // Auto-focus en el primer campo
     document.getElementById('ruc').focus();

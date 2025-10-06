@@ -12,8 +12,11 @@ class CountRequest {
         $this->conn = $db;
     }
 
+    /**
+     * Leer todos los count requests
+     */
     public function read() {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -23,8 +26,11 @@ class CountRequest {
         return $stmt;
     }
 
+    /**
+     * Obtener requests por cliente específico
+     */
     public function getByClient($client_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -37,8 +43,11 @@ class CountRequest {
         return $stmt;
     }
 
+    /**
+     * Obtener requests por token específico
+     */
     public function getByToken($token_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -51,6 +60,9 @@ class CountRequest {
         return $stmt;
     }
 
+    /**
+     * Crear nuevo count request
+     */
     public function create() {
         // Validar que el token existe
         $tokenModel = new TokenApi($this->conn);
@@ -78,6 +90,9 @@ class CountRequest {
         return false;
     }
 
+    /**
+     * Actualizar count request existente
+     */
     public function update() {
         $query = "UPDATE " . $this->table_name . " 
                  SET id_token_api=:id_token_api, tipo=:tipo, fecha=:fecha
@@ -101,6 +116,9 @@ class CountRequest {
         return false;
     }
 
+    /**
+     * Eliminar count request
+     */
     public function delete() {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
@@ -112,12 +130,11 @@ class CountRequest {
         return false;
     }
 
+    /**
+     * Leer un count request específico por ID
+     */
     public function readOne() {
-        $query = "SELECT cr.*, t.token, c.razon_social 
-                 FROM " . $this->table_name . " cr 
-                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
-                 LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE cr.id = ? LIMIT 0,1";
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         $stmt->execute();
@@ -133,8 +150,11 @@ class CountRequest {
         return false;
     }
 
+    /**
+     * Obtener lista de tokens activos para dropdown
+     */
     public function getTokens() {
-        $query = "SELECT t.id, t.token, c.razon_social, c.ruc
+        $query = "SELECT t.id, t.token, c.razon_social 
                  FROM tokens_api t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.estado = 1
@@ -144,31 +164,30 @@ class CountRequest {
         return $stmt;
     }
 
-    // NUEVO: Obtener estadísticas por tipo
-    public function getStatsByType() {
+    /**
+     * Obtener estadísticas de requests por tipo
+     */
+    public function getStatsByType($client_id = null) {
         $query = "SELECT tipo, COUNT(*) as total 
-                 FROM " . $this->table_name . " 
-                 GROUP BY tipo 
-                 ORDER BY total DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
-    }
-
-    // NUEVO: Obtener requests por fecha
-    public function getByDateRange($start_date, $end_date) {
-        $query = "SELECT cr.*, t.token, c.razon_social 
                  FROM " . $this->table_name . " cr 
-                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
-                 LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE cr.fecha BETWEEN ? AND ?
-                 ORDER BY cr.fecha DESC";
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id";
+        
+        $params = array();
+        
+        if (!empty($client_id)) {
+            $query .= " WHERE t.id_client_api = ?";
+            $params[] = $client_id;
+        }
+        
+        $query .= " GROUP BY tipo ORDER BY total DESC";
         
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $start_date);
-        $stmt->bindParam(2, $end_date);
-        $stmt->execute();
         
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(($key + 1), $value);
+        }
+        
+        $stmt->execute();
         return $stmt;
     }
 }

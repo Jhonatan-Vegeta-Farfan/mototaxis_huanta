@@ -7,6 +7,14 @@
                 <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Count Request</h4>
             </div>
             <div class="card-body">
+                <?php if (isset($error)): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <?php echo $error; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+
                 <form method="POST" action="">
                     <input type="hidden" name="id" value="<?php echo $this->model->id; ?>">
                     
@@ -17,7 +25,7 @@
                             <?php while ($token = $tokens->fetch(PDO::FETCH_ASSOC)): ?>
                             <option value="<?php echo $token['id']; ?>" 
                                     <?php echo $token['id'] == $this->model->id_token_api ? 'selected' : ''; ?>>
-                                <?php echo $token['razon_social'] . ' - ' . $token['token']; ?>
+                                <?php echo $token['razon_social'] . ' - ' . substr($token['token'], 0, 20) . '...'; ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
@@ -44,7 +52,7 @@
                             <i class="fas fa-arrow-left me-1"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Actualizar
+                            <i class="fas fa-save me-1"></i> Actualizar Request
                         </button>
                     </div>
                 </form>
@@ -52,5 +60,12 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo
+    document.getElementById('id_token_api').focus();
+});
+</script>
 
 <?php include_once 'views/layouts/footer.php'; ?>
