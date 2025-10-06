@@ -13,7 +13,7 @@ class CountRequest {
     }
 
     public function read() {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -24,7 +24,7 @@ class CountRequest {
     }
 
     public function getByClient($client_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -38,7 +38,7 @@ class CountRequest {
     }
 
     public function getByToken($token_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -52,6 +52,13 @@ class CountRequest {
     }
 
     public function create() {
+        // Validar que el token existe
+        $tokenModel = new TokenApi($this->conn);
+        $tokenModel->id = $this->id_token_api;
+        if (!$tokenModel->readOne()) {
+            return false;
+        }
+
         $query = "INSERT INTO " . $this->table_name . " 
                  SET id_token_api=:id_token_api, tipo=:tipo, fecha=:fecha";
         
@@ -106,7 +113,11 @@ class CountRequest {
     }
 
     public function readOne() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $query = "SELECT cr.*, t.token, c.razon_social 
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE cr.id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         $stmt->execute();
@@ -123,13 +134,41 @@ class CountRequest {
     }
 
     public function getTokens() {
-        $query = "SELECT t.id, t.token, c.razon_social 
+        $query = "SELECT t.id, t.token, c.razon_social, c.ruc
                  FROM tokens_api t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.estado = 1
                  ORDER BY c.razon_social, t.id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
+        return $stmt;
+    }
+
+    // NUEVO: Obtener estadísticas por tipo
+    public function getStatsByType() {
+        $query = "SELECT tipo, COUNT(*) as total 
+                 FROM " . $this->table_name . " 
+                 GROUP BY tipo 
+                 ORDER BY total DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // NUEVO: Obtener requests por fecha
+    public function getByDateRange($start_date, $end_date) {
+        $query = "SELECT cr.*, t.token, c.razon_social 
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE cr.fecha BETWEEN ? AND ?
+                 ORDER BY cr.fecha DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $start_date);
+        $stmt->bindParam(2, $end_date);
+        $stmt->execute();
+        
         return $stmt;
     }
 }

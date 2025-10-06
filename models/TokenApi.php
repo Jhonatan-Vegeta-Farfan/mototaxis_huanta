@@ -14,7 +14,7 @@ class TokenApi {
     }
 
     public function read() {
-        $query = "SELECT t.*, c.razon_social 
+        $query = "SELECT t.*, c.razon_social, c.ruc 
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.estado = 1 
@@ -25,7 +25,7 @@ class TokenApi {
     }
 
     public function getByClient($client_id) {
-        $query = "SELECT t.*, c.razon_social 
+        $query = "SELECT t.*, c.razon_social, c.ruc 
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ? AND t.estado = 1
@@ -37,7 +37,6 @@ class TokenApi {
         return $stmt;
     }
 
-    // GENERAR TOKEN AUTOMÁTICO
     public function generateToken($client_id) {
         $clientModel = new ClientApi($this->conn);
         $clientModel->id = $client_id;
@@ -45,11 +44,18 @@ class TokenApi {
         if ($clientModel->readOne()) {
             $token_count = $clientModel->countTokens($client_id);
             
-            // Generar token único con identificador del cliente
-            $base_token = bin2hex(random_bytes(16)); // 32 caracteres hexadecimales
-            $client_identifier = substr($clientModel->razon_social, 0, 1); // Primeras 3 letras
-            $client_identifier = preg_replace('/[^a-zA-Z0-9]/', '', $client_identifier); // Solo alfanumérico
-            $client_identifier = strtoupper($client_identifier); // Mayúsculas
+            // Generar token único
+            $base_token = bin2hex(random_bytes(16));
+            
+            // Crear identificador del cliente (primeras 3 letras sin espacios)
+            $client_identifier = substr($clientModel->razon_social, 0, 3);
+            $client_identifier = preg_replace('/[^a-zA-Z0-9]/', '', $client_identifier);
+            $client_identifier = strtoupper($client_identifier);
+            
+            // Si no hay suficientes letras, usar RUC
+            if (empty($client_identifier)) {
+                $client_identifier = substr($clientModel->ruc, 0, 3);
+            }
             
             return $base_token . '-' . $client_identifier . '-' . $token_count;
         }
@@ -58,9 +64,16 @@ class TokenApi {
     }
 
     public function create() {
+        // Validar que el cliente existe
+        $clientModel = new ClientApi($this->conn);
+        $clientModel->id = $this->id_client_api;
+        if (!$clientModel->readOne()) {
+            return false;
+        }
+
         // Generar token automáticamente
         $this->token = $this->generateToken($this->id_client_api);
-        $this->fecha_registro = date('Y-m-d'); // Fecha actual automática
+        $this->fecha_registro = date('Y-m-d');
         
         if (!$this->token) {
             return false;
@@ -126,7 +139,10 @@ class TokenApi {
     }
 
     public function readOne() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $query = "SELECT t.*, c.razon_social, c.ruc 
+                 FROM " . $this->table_name . " t 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE t.id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         $stmt->execute();
@@ -144,10 +160,33 @@ class TokenApi {
     }
 
     public function getClientes() {
-        $query = "SELECT id, razon_social FROM client_api WHERE estado = 1";
+        $query = "SELECT id, razon_social, ruc FROM client_api WHERE estado = 1 ORDER BY razon_social";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
+    }
+
+    // NUEVO: Verificar si token ya existe
+    public function tokenExists($token) {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE token = ? AND estado = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    // NUEVO: Obtener estadísticas del token
+    public function getStats($token_id) {
+        $query = "SELECT COUNT(*) as total_requests 
+                 FROM count_request 
+                 WHERE id_token_api = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token_id);
+        $stmt->execute();
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total_requests'];
     }
 }
 ?>

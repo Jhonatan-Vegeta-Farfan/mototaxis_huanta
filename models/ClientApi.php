@@ -159,7 +159,6 @@ class ClientApi {
         return false;
     }
 
-    // NUEVO MÉTODO: Contar tokens del cliente
     public function countTokens($client_id) {
         $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
         $stmt = $this->conn->prepare($query);
@@ -167,7 +166,36 @@ class ClientApi {
         $stmt->execute();
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] + 1; // +1 para el siguiente token
+        return $row['total'] + 1;
+    }
+
+    // NUEVO: Obtener estadísticas del cliente
+    public function getStats($client_id) {
+        $stats = [
+            'total_tokens' => 0,
+            'total_requests' => 0
+        ];
+        
+        // Contar tokens
+        $query_tokens = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
+        $stmt_tokens = $this->conn->prepare($query_tokens);
+        $stmt_tokens->bindParam(1, $client_id);
+        $stmt_tokens->execute();
+        $row_tokens = $stmt_tokens->fetch(PDO::FETCH_ASSOC);
+        $stats['total_tokens'] = $row_tokens['total'];
+        
+        // Contar requests
+        $query_requests = "SELECT COUNT(*) as total 
+                          FROM count_request cr 
+                          JOIN tokens_api t ON cr.id_token_api = t.id 
+                          WHERE t.id_client_api = ?";
+        $stmt_requests = $this->conn->prepare($query_requests);
+        $stmt_requests->bindParam(1, $client_id);
+        $stmt_requests->execute();
+        $row_requests = $stmt_requests->fetch(PDO::FETCH_ASSOC);
+        $stats['total_requests'] = $row_requests['total'];
+        
+        return $stats;
     }
 }
 ?>
