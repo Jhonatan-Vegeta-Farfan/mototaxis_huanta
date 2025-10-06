@@ -25,7 +25,11 @@
                     
                     <div class="mb-3">
                         <label for="token" class="form-label">Token</label>
-                        <textarea class="form-control" id="token" name="token" rows="3" required><?php echo $this->model->token; ?></textarea>
+                        <input type="text" class="form-control" id="token" name="token" 
+                               value="<?php echo $this->model->token; ?>" required>
+                        <small class="form-text text-muted">
+                            Formato: [Código único]-[Identificador cliente]-[Número secuencial]
+                        </small>
                     </div>
                     
                     <div class="row">

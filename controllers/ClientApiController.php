@@ -1,33 +1,32 @@
 <?php
 class ClientApiController {
     private $model;
+    private $db;
 
     public function __construct($db) {
         $this->model = new ClientApi($db);
+        $this->db = $db;
     }
 
     public function index() {
-        // Verificar si hay búsqueda
         $search_keywords = isset($_GET['search']) ? $_GET['search'] : '';
         $advanced_search = isset($_GET['advanced_search']) ? true : false;
         
         if (!empty($search_keywords)) {
             if ($advanced_search) {
-                // Búsqueda avanzada
                 $ruc = isset($_GET['ruc']) ? $_GET['ruc'] : '';
                 $razon_social = isset($_GET['razon_social']) ? $_GET['razon_social'] : '';
                 $estado = isset($_GET['estado']) ? $_GET['estado'] : '';
                 
                 $stmt = $this->model->advancedSearch($ruc, $razon_social, $estado);
             } else {
-                // Búsqueda simple
                 $stmt = $this->model->search($search_keywords);
             }
         } else {
-            // Mostrar todos los registros
             $stmt = $this->model->read();
         }
         
+        $db_connection = $this->db;
         include_once 'views/client_api/index.php';
     }
 
@@ -45,6 +44,7 @@ class ClientApiController {
                 exit();
             }
         }
+        $db_connection = $this->db;
         include_once 'views/client_api/create.php';
     }
 
@@ -67,6 +67,7 @@ class ClientApiController {
         } else {
             $this->model->readOne();
         }
+        $db_connection = $this->db;
         include_once 'views/client_api/edit.php';
     }
 
@@ -76,19 +77,6 @@ class ClientApiController {
             header("Location: index.php?controller=client_api&action=index");
             exit();
         }
-    }
-
-    // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
-    public function search() {
-        $search_keywords = isset($_GET['q']) ? $_GET['q'] : '';
-        
-        if (!empty($search_keywords)) {
-            $stmt = $this->model->search($search_keywords);
-        } else {
-            $stmt = $this->model->read();
-        }
-        
-        include_once 'views/client_api/index.php';
     }
 }
 ?>

@@ -10,7 +10,6 @@
 <!-- Indicador de Filtro por Cliente -->
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
-    // Obtener información del cliente para mostrar
     $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
@@ -49,7 +48,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
-                        <th>Token</th>
+                        <th>Token Generado</th>
                         <th>Fecha Registro</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -70,7 +69,7 @@
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 20) . '...'; ?></code>
+                            <code class="text-light bg-dark p-1 rounded"><?php echo $row['token']; ?></code>
                             <br>
                             <small class="text-muted">ID Cliente: <?php echo $row['id_client_api']; ?></small>
                         </td>
@@ -204,7 +203,6 @@
 </div>
 
 <script>
-// Script para el modal de detalles
 document.addEventListener('DOMContentLoaded', function() {
     const viewButtons = document.querySelectorAll('.view-details');
     
@@ -212,29 +210,24 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const tokenId = this.getAttribute('data-id');
             
-            // Obtener datos de los atributos data
             document.getElementById('modal-id').textContent = tokenId;
             document.getElementById('modal-cliente').textContent = this.getAttribute('data-cliente');
             document.getElementById('modal-token').textContent = this.getAttribute('data-token');
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
             
-            // Estado con badge
             const estado = this.getAttribute('data-estado');
             const estadoText = estado == '1' ? 'Activo' : 'Inactivo';
             const estadoClass = estado == '1' ? 'success' : 'danger';
             document.getElementById('modal-estado').innerHTML = `<span class="badge bg-${estadoClass}">${estadoText}</span>`;
             
-            // Actualizar enlaces de acciones
             document.getElementById('modal-edit-link').href = `index.php?controller=tokens_api&action=edit&id=${tokenId}`;
             document.getElementById('modal-requests-link').href = `index.php?controller=count_request&action=index&token_id=${tokenId}`;
             
-            // Actualizar título del modal
             document.getElementById('detailsModalLabel').textContent = 
                 'Detalles del Token - ID: ' + tokenId;
         });
     });
     
-    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

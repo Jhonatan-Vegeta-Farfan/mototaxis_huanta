@@ -260,7 +260,6 @@
 </div>
 
 <script>
-// Script para el modal de detalles
 document.addEventListener('DOMContentLoaded', function() {
     const viewButtons = document.querySelectorAll('.view-details');
     
@@ -268,37 +267,31 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const clientId = this.getAttribute('data-id');
             
-            // Obtener datos de los atributos data
             document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
             document.getElementById('modal-razon-social').textContent = this.getAttribute('data-razon-social');
             document.getElementById('modal-telefono').textContent = this.getAttribute('data-telefono') || 'No especificado';
             document.getElementById('modal-correo').textContent = this.getAttribute('data-correo') || 'No especificado';
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
             
-            // Estado con badge
             const estado = this.getAttribute('data-estado');
             const estadoText = estado == '1' ? 'Activo' : 'Inactivo';
             const estadoClass = estado == '1' ? 'success' : 'danger';
             document.getElementById('modal-estado').innerHTML = `<span class="badge bg-${estadoClass}">${estadoText}</span>`;
             
-            // Actualizar enlaces de acciones
             document.getElementById('modal-edit-link').href = `index.php?controller=client_api&action=edit&id=${clientId}`;
             document.getElementById('modal-tokens-link').href = `index.php?controller=tokens_api&action=index&client_id=${clientId}`;
             document.getElementById('modal-requests-link').href = `index.php?controller=count_request&action=index&client_id=${clientId}`;
             
-            // Actualizar título del modal
             document.getElementById('detailsModalLabel').textContent = 
                 'Detalles - ' + this.getAttribute('data-razon-social');
         });
     });
     
-    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Auto-focus en el campo de búsqueda
     const searchInput = document.querySelector('input[name="search"]');
     if (searchInput) {
         searchInput.focus();

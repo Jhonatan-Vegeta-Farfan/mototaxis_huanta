@@ -14,7 +14,7 @@
                             <option value="">Seleccionar Token</option>
                             <?php while ($token = $tokens->fetch(PDO::FETCH_ASSOC)): ?>
                             <option value="<?php echo $token['id']; ?>">
-                                <?php echo $token['razon_social'] . ' - ' . substr($token['token'], 0, 20) . '...'; ?>
+                                <?php echo $token['razon_social'] . ' - ' . $token['token']; ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
@@ -33,7 +33,8 @@
                     
                     <div class="mb-3">
                         <label for="fecha" class="form-label">Fecha</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required
+                               value="<?php echo date('Y-m-d'); ?>">
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">

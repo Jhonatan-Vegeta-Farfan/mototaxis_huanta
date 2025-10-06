@@ -22,7 +22,6 @@ class ClientApi {
         return $stmt;
     }
 
-    // MÉTODO DE BÚSQUEDA SIMPLE AGREGADO
     public function search($keywords) {
         $query = "SELECT * FROM " . $this->table_name . " 
                  WHERE (ruc LIKE ? OR razon_social LIKE ?) AND estado = 1
@@ -30,7 +29,6 @@ class ClientApi {
         
         $stmt = $this->conn->prepare($query);
         
-        // Agregar comodines para la búsqueda
         $keywords = "%{$keywords}%";
         $stmt->bindParam(1, $keywords);
         $stmt->bindParam(2, $keywords);
@@ -39,7 +37,6 @@ class ClientApi {
         return $stmt;
     }
 
-    // MÉTODO DE BÚSQUEDA AVANZADA
     public function advancedSearch($ruc = null, $razon_social = null, $estado = null) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
         
@@ -55,13 +52,17 @@ class ClientApi {
             $params[] = "%{$razon_social}%";
         }
         
-
+        if (!empty($estado)) {
+            $query .= " AND estado = ?";
+            $params[] = $estado;
+        } else {
+            $query .= " AND estado = 1";
+        }
         
         $query .= " ORDER BY id DESC";
         
         $stmt = $this->conn->prepare($query);
         
-        // Bind parameters dinámicamente
         foreach ($params as $key => $value) {
             $stmt->bindValue(($key + 1), $value);
         }
@@ -156,6 +157,17 @@ class ClientApi {
             return true;
         }
         return false;
+    }
+
+    // NUEVO MÉTODO: Contar tokens del cliente
+    public function countTokens($client_id) {
+        $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] + 1; // +1 para el siguiente token
     }
 }
 ?>

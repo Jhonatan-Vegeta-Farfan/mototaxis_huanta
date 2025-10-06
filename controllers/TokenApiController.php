@@ -9,18 +9,14 @@ class TokenApiController {
     }
 
     public function index() {
-        // Verificar si hay filtro por cliente
         $client_id = isset($_GET['client_id']) ? $_GET['client_id'] : '';
         
         if (!empty($client_id)) {
-            // Filtrar por cliente específico
             $stmt = $this->model->getByClient($client_id);
         } else {
-            // Mostrar todos los registros
             $stmt = $this->model->read();
         }
         
-        // Pasar la conexión a la vista
         $db_connection = $this->db;
         include_once 'views/tokens_api/index.php';
     }
@@ -31,8 +27,7 @@ class TokenApiController {
         
         if($_POST) {
             $this->model->id_client_api = $_POST['id_client_api'];
-            $this->model->token = $_POST['token'];
-            $this->model->fecha_registro = $_POST['fecha_registro'];
+            // Token y fecha se generan automáticamente
             $this->model->estado = 1;
 
             if($this->model->create()) {

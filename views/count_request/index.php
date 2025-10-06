@@ -10,7 +10,6 @@
 <!-- Indicador de Filtro -->
 <?php if (isset($_GET['client_id']) && !empty($_GET['client_id'])): ?>
 <?php
-    // Obtener información del cliente para mostrar
     $clientModel = new ClientApi($db_connection);
     $clientModel->id = $_GET['client_id'];
     $clientInfo = '';
@@ -31,7 +30,6 @@
 </div>
 <?php elseif (isset($_GET['token_id']) && !empty($_GET['token_id'])): ?>
 <?php
-    // Obtener información del token para mostrar
     $tokenModel = new TokenApi($db_connection);
     $tokenModel->id = $_GET['token_id'];
     $tokenInfo = '';
@@ -39,7 +37,7 @@
         $clientModel = new ClientApi($db_connection);
         $clientModel->id = $tokenModel->id_client_api;
         if ($clientModel->readOne()) {
-            $tokenInfo = 'Token: ' . substr($tokenModel->token, 0, 20) . '... - Cliente: ' . $clientModel->razon_social;
+            $tokenInfo = 'Token: ' . $tokenModel->token . ' - Cliente: ' . $clientModel->razon_social;
         }
     }
 ?>
@@ -88,23 +86,14 @@
                             <strong class="text-warning"><?php echo $row['razon_social']; ?></strong>
                             <br>
                             <small>
-                                <?php
-                                // Obtener client_id desde token_id
-                                $tokenModel = new TokenApi($db_connection);
-                                $tokenModel->id = $row['id_token_api'];
-                                $client_id_from_token = '';
-                                if ($tokenModel->readOne()) {
-                                    $client_id_from_token = $tokenModel->id_client_api;
-                                }
-                                ?>
-                                <a href="index.php?controller=count_request&action=index&client_id=<?php echo $client_id_from_token; ?>" 
+                                <a href="index.php?controller=count_request&action=index&client_id=<?php echo $row['client_id']; ?>" 
                                    class="text-info">
                                     <i class="fas fa-filter me-1"></i>Filtrar por este cliente
                                 </a>
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 15) . '...'; ?></code>
+                            <code class="text-light bg-dark p-1 rounded"><?php echo $row['token']; ?></code>
                             <br>
                             <small>
                                 <a href="index.php?controller=count_request&action=index&token_id=<?php echo $row['id_token_api']; ?>" 
@@ -246,7 +235,6 @@
 </div>
 
 <script>
-// Script para el modal de detalles
 document.addEventListener('DOMContentLoaded', function() {
     const viewButtons = document.querySelectorAll('.view-details');
     
@@ -254,13 +242,11 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const requestId = this.getAttribute('data-id');
             
-            // Obtener datos de los atributos data
             document.getElementById('modal-id').textContent = requestId;
             document.getElementById('modal-cliente').textContent = this.getAttribute('data-cliente');
             document.getElementById('modal-token').textContent = this.getAttribute('data-token');
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
             
-            // Tipo con badge
             const tipo = this.getAttribute('data-tipo');
             const tipoClass = 
                 tipo === 'consulta' ? 'info' :
@@ -269,16 +255,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 tipo === 'eliminacion' ? 'danger' : 'secondary';
             document.getElementById('modal-tipo').innerHTML = `<span class="badge bg-${tipoClass}">${tipo}</span>`;
             
-            // Actualizar enlaces de acciones
             document.getElementById('modal-edit-link').href = `index.php?controller=count_request&action=edit&id=${requestId}`;
             
-            // Actualizar título del modal
             document.getElementById('detailsModalLabel').textContent = 
                 'Detalles del Request - ID: ' + requestId;
         });
     });
     
-    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

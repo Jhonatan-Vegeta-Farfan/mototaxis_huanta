@@ -7,6 +7,12 @@
                 <h4 class="mb-0"><i class="fas fa-plus me-2"></i>Nuevo Token API</h4>
             </div>
             <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Información:</strong> El token se generará automáticamente al guardar. 
+                    La fecha de registro será la fecha actual.
+                </div>
+                
                 <form method="POST" action="">
                     <div class="mb-3">
                         <label for="id_client_api" class="form-label">Cliente</label>
@@ -14,21 +20,19 @@
                             <option value="">Seleccionar Cliente</option>
                             <?php while ($cliente = $clientes->fetch(PDO::FETCH_ASSOC)): ?>
                             <option value="<?php echo $cliente['id']; ?>">
-                                <?php echo $cliente['razon_social']; ?>
+                                <?php echo $cliente['razon_social']; ?> (RUC: <?php echo $cliente['ruc']; ?>)
                             </option>
                             <?php endwhile; ?>
                         </select>
+                        <small class="form-text text-muted">
+                            Seleccione el cliente para el cual se generará el token automáticamente.
+                        </small>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="token" class="form-label">Token</label>
-                        <textarea class="form-control" id="token" name="token" rows="3" required></textarea>
-                        <small class="form-text text-muted">Ingrese el token de autenticación</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="fecha_registro" class="form-label">Fecha de Registro</label>
-                        <input type="date" class="form-control" id="fecha_registro" name="fecha_registro" required>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Nota:</strong> El token se generará con el formato: 
+                        [Código único]-[Identificador cliente]-[Número secuencial]
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -36,7 +40,7 @@
                             <i class="fas fa-arrow-left me-1"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Guardar
+                            <i class="fas fa-key me-1"></i> Generar Token
                         </button>
                     </div>
                 </form>

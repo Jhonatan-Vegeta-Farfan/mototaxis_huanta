@@ -13,7 +13,7 @@ class CountRequest {
     }
 
     public function read() {
-        $query = "SELECT cr.*, t.token, c.razon_social 
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -23,9 +23,8 @@ class CountRequest {
         return $stmt;
     }
 
-    // MÉTODO PARA FILTRAR POR CLIENTE
     public function getByClient($client_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social 
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -38,9 +37,8 @@ class CountRequest {
         return $stmt;
     }
 
-    // MÉTODO PARA FILTRAR POR TOKEN
     public function getByToken($token_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social 
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -128,7 +126,8 @@ class CountRequest {
         $query = "SELECT t.id, t.token, c.razon_social 
                  FROM tokens_api t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.estado = 1";
+                 WHERE t.estado = 1
+                 ORDER BY c.razon_social, t.id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;

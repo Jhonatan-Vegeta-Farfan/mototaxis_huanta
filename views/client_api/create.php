@@ -33,7 +33,8 @@
                     
                     <div class="mb-3">
                         <label for="fecha_registro" class="form-label">Fecha de Registro</label>
-                        <input type="date" class="form-control" id="fecha_registro" name="fecha_registro" required>
+                        <input type="date" class="form-control" id="fecha_registro" name="fecha_registro" required
+                               value="<?php echo date('Y-m-d'); ?>">
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">

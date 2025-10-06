@@ -17,7 +17,7 @@
                             <?php while ($token = $tokens->fetch(PDO::FETCH_ASSOC)): ?>
                             <option value="<?php echo $token['id']; ?>" 
                                     <?php echo $token['id'] == $this->model->id_token_api ? 'selected' : ''; ?>>
-                                <?php echo $token['razon_social'] . ' - ' . substr($token['token'], 0, 20) . '...'; ?>
+                                <?php echo $token['razon_social'] . ' - ' . $token['token']; ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
