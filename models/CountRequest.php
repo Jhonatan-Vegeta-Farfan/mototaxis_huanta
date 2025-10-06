@@ -13,10 +13,10 @@ class CountRequest {
     }
 
     /**
-     * Leer todos los count requests
+     * Leer todos los count requests con información relacionada
      */
     public function read() {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -30,7 +30,7 @@ class CountRequest {
      * Obtener requests por cliente específico
      */
     public function getByClient($client_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -47,7 +47,7 @@ class CountRequest {
      * Obtener requests por token específico
      */
     public function getByToken($token_id) {
-        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id, c.ruc
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
@@ -64,13 +64,6 @@ class CountRequest {
      * Crear nuevo count request
      */
     public function create() {
-        // Validar que el token existe
-        $tokenModel = new TokenApi($this->conn);
-        $tokenModel->id = $this->id_token_api;
-        if (!$tokenModel->readOne()) {
-            return false;
-        }
-
         $query = "INSERT INTO " . $this->table_name . " 
                  SET id_token_api=:id_token_api, tipo=:tipo, fecha=:fecha";
         
@@ -134,7 +127,11 @@ class CountRequest {
      * Leer un count request específico por ID
      */
     public function readOne() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $query = "SELECT cr.*, t.token, c.razon_social, c.id as client_id
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE cr.id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         $stmt->execute();
@@ -154,7 +151,7 @@ class CountRequest {
      * Obtener lista de tokens activos para dropdown
      */
     public function getTokens() {
-        $query = "SELECT t.id, t.token, c.razon_social 
+        $query = "SELECT t.id, t.token, c.razon_social, c.ruc
                  FROM tokens_api t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.estado = 1
@@ -170,24 +167,44 @@ class CountRequest {
     public function getStatsByType($client_id = null) {
         $query = "SELECT tipo, COUNT(*) as total 
                  FROM " . $this->table_name . " cr 
-                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id";
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 WHERE 1=1";
         
-        $params = array();
+        $params = [];
         
-        if (!empty($client_id)) {
-            $query .= " WHERE t.id_client_api = ?";
+        if ($client_id) {
+            $query .= " AND t.id_client_api = ?";
             $params[] = $client_id;
         }
         
         $query .= " GROUP BY tipo ORDER BY total DESC";
         
         $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt;
+    }
+
+    /**
+     * Obtener estadísticas de requests por fecha
+     */
+    public function getStatsByDate($client_id = null, $limit = 30) {
+        $query = "SELECT fecha, COUNT(*) as total 
+                 FROM " . $this->table_name . " cr 
+                 LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
+                 WHERE 1=1";
         
-        foreach ($params as $key => $value) {
-            $stmt->bindValue(($key + 1), $value);
+        $params = [];
+        
+        if ($client_id) {
+            $query .= " AND t.id_client_api = ?";
+            $params[] = $client_id;
         }
         
-        $stmt->execute();
+        $query .= " GROUP BY fecha ORDER BY fecha DESC LIMIT ?";
+        $params[] = $limit;
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
         return $stmt;
     }
 }

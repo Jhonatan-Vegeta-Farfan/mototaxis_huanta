@@ -34,9 +34,11 @@ class ClientApiController {
     }
 
     /**
-     * Crear nuevo cliente API
+     * Mostrar formulario y procesar creación de nuevo cliente API
      */
     public function create() {
+        $error = '';
+        
         if($_POST) {
             $this->model->ruc = $_POST['ruc'];
             $this->model->razon_social = $_POST['razon_social'];
@@ -45,22 +47,29 @@ class ClientApiController {
             $this->model->fecha_registro = $_POST['fecha_registro'];
             $this->model->estado = 1;
 
-            if($this->model->create()) {
-                header("Location: index.php?controller=client_api&action=index");
-                exit();
+            // Validar RUC único
+            if ($this->model->rucExists($this->model->ruc)) {
+                $error = 'El RUC ya está registrado en el sistema';
             } else {
-                $error = "Error al crear el cliente. Verifique los datos.";
+                if($this->model->create()) {
+                    header("Location: index.php?controller=client_api&action=index");
+                    exit();
+                } else {
+                    $error = 'Error al crear el cliente API';
+                }
             }
         }
+        
         $db_connection = $this->db;
         include_once 'views/client_api/create.php';
     }
 
     /**
-     * Editar cliente API existente
+     * Mostrar formulario y procesar edición de cliente API
      */
     public function edit() {
         $this->model->id = $_GET['id'];
+        $error = '';
         
         if($_POST) {
             $this->model->id = $_POST['id'];
@@ -71,15 +80,21 @@ class ClientApiController {
             $this->model->fecha_registro = $_POST['fecha_registro'];
             $this->model->estado = $_POST['estado'];
 
-            if($this->model->update()) {
-                header("Location: index.php?controller=client_api&action=index");
-                exit();
+            // Validar RUC único excluyendo el actual
+            if ($this->model->rucExists($this->model->ruc, $this->model->id)) {
+                $error = 'El RUC ya está registrado en el sistema por otro cliente';
             } else {
-                $error = "Error al actualizar el cliente. Verifique los datos.";
+                if($this->model->update()) {
+                    header("Location: index.php?controller=client_api&action=index");
+                    exit();
+                } else {
+                    $error = 'Error al actualizar el cliente API';
+                }
             }
         } else {
             $this->model->readOne();
         }
+        
         $db_connection = $this->db;
         include_once 'views/client_api/edit.php';
     }
@@ -93,20 +108,9 @@ class ClientApiController {
             header("Location: index.php?controller=client_api&action=index");
             exit();
         } else {
-            echo "Error al eliminar el cliente.";
+            // Mostrar error si no se puede eliminar
+            echo "<script>alert('Error al eliminar el cliente API'); window.location.href='index.php?controller=client_api&action=index';</script>";
         }
-    }
-
-    /**
-     * Función helper para obtener client_id desde token_id
-     */
-    public function getClientIdFromToken($tokenId) {
-        $tokenModel = new TokenApi($this->db);
-        $tokenModel->id = $tokenId;
-        if ($tokenModel->readOne()) {
-            return $tokenModel->id_client_api;
-        }
-        return $tokenId;
     }
 }
 ?>

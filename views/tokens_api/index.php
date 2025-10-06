@@ -62,6 +62,8 @@
                         <td>
                             <strong class="text-warning"><?php echo $row['razon_social']; ?></strong>
                             <br>
+                            <small class="text-muted">RUC: <?php echo $row['ruc']; ?></small>
+                            <br>
                             <small>
                                 <a href="index.php?controller=tokens_api&action=index&client_id=<?php echo $row['id_client_api']; ?>" 
                                    class="text-info">
@@ -70,9 +72,12 @@
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 20) . '...'; ?></code>
-                            <br>
-                            <small class="text-muted">ID Cliente: <?php echo $row['id_client_api']; ?></small>
+                            <code class="text-light bg-dark p-1 rounded d-block" style="font-size: 0.8rem;">
+                                <?php echo $row['token']; ?>
+                            </code>
+                            <small class="text-muted d-block mt-1">
+                                ID Cliente: <?php echo $row['id_client_api']; ?>
+                            </small>
                         </td>
                         <td>
                             <span class="badge bg-secondary"><?php echo $row['fecha_registro']; ?></span>
@@ -101,6 +106,7 @@
                                         data-token="<?php echo $row['token']; ?>"
                                         data-fecha="<?php echo $row['fecha_registro']; ?>"
                                         data-estado="<?php echo $row['estado']; ?>"
+                                        data-ruc="<?php echo $row['ruc']; ?>"
                                         data-bs-toggle="tooltip" title="Ver Detalles">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -161,6 +167,10 @@
                                 <td id="modal-cliente"></td>
                             </tr>
                             <tr>
+                                <th>RUC:</th>
+                                <td id="modal-ruc"></td>
+                            </tr>
+                            <tr>
                                 <th>Estado:</th>
                                 <td id="modal-estado"></td>
                             </tr>
@@ -176,7 +186,7 @@
                             <tr>
                                 <th>Token Completo:</th>
                                 <td>
-                                    <code id="modal-token" class="bg-dark text-light p-1 rounded d-block"></code>
+                                    <code id="modal-token" class="bg-dark text-light p-2 rounded d-block" style="word-break: break-all;"></code>
                                 </td>
                             </tr>
                         </table>
@@ -213,6 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             document.getElementById('modal-id').textContent = tokenId;
             document.getElementById('modal-cliente').textContent = this.getAttribute('data-cliente');
+            document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
             document.getElementById('modal-token').textContent = this.getAttribute('data-token');
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
             

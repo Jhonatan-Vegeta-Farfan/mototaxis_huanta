@@ -7,7 +7,7 @@
                 <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Cliente API</h4>
             </div>
             <div class="card-body">
-                <?php if (isset($error)): ?>
+                <?php if (isset($error) && !empty($error)): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <?php echo $error; ?>
@@ -22,7 +22,8 @@
                         <div class="col-md-6 mb-3">
                             <label for="ruc" class="form-label">RUC *</label>
                             <input type="text" class="form-control" id="ruc" name="ruc" 
-                                   value="<?php echo $this->model->ruc; ?>" required maxlength="11">
+                                   value="<?php echo $this->model->ruc; ?>" required maxlength="11" pattern="[0-9]{11}">
+                            <div class="form-text">11 dígitos del RUC</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="razon_social" class="form-label">Razón Social *</label>
@@ -64,7 +65,7 @@
                             <i class="fas fa-arrow-left me-1"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Actualizar Cliente
+                            <i class="fas fa-save me-1"></i> Actualizar
                         </button>
                     </div>
                 </form>
@@ -75,17 +76,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Validación de RUC
+    // Validación de RUC en tiempo real
     const rucInput = document.getElementById('ruc');
-    rucInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        if (this.value.length > 11) {
-            this.value = this.value.slice(0, 11);
-        }
-    });
-
-    // Auto-focus en el primer campo
-    document.getElementById('ruc').focus();
+    if (rucInput) {
+        rucInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 11) {
+                this.value = this.value.slice(0, 11);
+            }
+        });
+    }
 });
 </script>
 

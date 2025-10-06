@@ -7,7 +7,7 @@
                 <h4 class="mb-0"><i class="fas fa-plus me-2"></i>Nuevo Token API</h4>
             </div>
             <div class="card-body">
-                <?php if (isset($error)): ?>
+                <?php if (isset($error) && !empty($error)): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <?php echo $error; ?>
@@ -17,32 +17,43 @@
 
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Información:</strong> El token se generará automáticamente con un formato único que incluye un identificador del cliente y un número secuencial.
+                    <strong>Información:</strong> El token se generará automáticamente con un identificador único del cliente. La fecha de registro será la fecha actual.
                 </div>
 
                 <form method="POST" action="">
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="id_client_api" class="form-label">Cliente *</label>
                         <select class="form-control" id="id_client_api" name="id_client_api" required>
                             <option value="">Seleccionar Cliente</option>
                             <?php while ($cliente = $clientes->fetch(PDO::FETCH_ASSOC)): ?>
-                            <option value="<?php echo $cliente['id']; ?>">
-                                <?php echo $cliente['razon_social']; ?>
+                            <option value="<?php echo $cliente['id']; ?>" 
+                                    <?php echo (isset($_POST['id_client_api']) && $_POST['id_client_api'] == $cliente['id']) ? 'selected' : ''; ?>>
+                                <?php echo $cliente['razon_social'] . ' (RUC: ' . $cliente['ruc'] . ')'; ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
-                        <div class="form-text">Seleccione el cliente para el cual generará el token</div>
+                        <div class="form-text">Seleccione el cliente para el cual se generará el token</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Información del Token</label>
-                        <div class="card bg-dark text-light">
-                            <div class="card-body">
-                                <small>
-                                    <strong>Formato del token:</strong> [hash_aleatorio]-[ID_CLIENTE]-[NÚMERO]<br>
-                                    <strong>Ejemplo:</strong> a1b2c3d4e5f6g7h8-TRA-1<br>
-                                    <strong>Fecha de registro:</strong> Se asignará automáticamente la fecha actual
-                                </small>
+
+                    <!-- Información del token generado automáticamente -->
+                    <div class="card bg-dark text-light mb-4">
+                        <div class="card-body">
+                            <h6 class="text-warning mb-3">
+                                <i class="fas fa-key me-2"></i>Información del Token a Generar
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Formato del Token:</strong><br>
+                                    <small>Base64Random-ClienteID-Número</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Fecha de Registro:</strong><br>
+                                    <small><?php echo date('Y-m-d'); ?></small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <strong>Ejemplo:</strong><br>
+                                <code class="text-light">a1b2c3d4e5f6-TRA-1</code>
                             </div>
                         </div>
                     </div>
@@ -63,7 +74,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus en el primer campo
+    // Auto-focus en el campo de selección
     document.getElementById('id_client_api').focus();
 });
 </script>

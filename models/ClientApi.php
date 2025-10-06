@@ -181,7 +181,7 @@ class ClientApi {
     }
 
     /**
-     * Contar tokens activos del cliente
+     * Contar tokens activos del cliente para generar identificador único
      */
     public function countTokens($client_id) {
         $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
@@ -190,20 +190,25 @@ class ClientApi {
         $stmt->execute();
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'];
+        return $row['total'] + 1; // +1 para el siguiente token
     }
 
     /**
-     * Obtener información del cliente para generar token
+     * Verificar si RUC ya existe
      */
-    public function getClientInfo($client_id) {
-        $query = "SELECT razon_social FROM " . $this->table_name . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $client_id);
-        $stmt->execute();
+    public function rucExists($ruc, $exclude_id = null) {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE ruc = ?";
+        $params = [$ruc];
         
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? $row['razon_social'] : false;
+        if ($exclude_id) {
+            $query .= " AND id != ?";
+            $params[] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        
+        return $stmt->rowCount() > 0;
     }
 }
 ?>

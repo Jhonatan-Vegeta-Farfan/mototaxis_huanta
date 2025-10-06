@@ -8,9 +8,7 @@ class CountRequestController {
         $this->db = $db;
     }
 
-    /**
-     * Mostrar lista de count requests con opciones de filtro
-     */
+    // Mostrar lista de requests con filtros por cliente y token
     public function index() {
         $client_id = isset($_GET['client_id']) ? $_GET['client_id'] : '';
         $token_id = isset($_GET['token_id']) ? $_GET['token_id'] : '';
@@ -27,9 +25,7 @@ class CountRequestController {
         include_once 'views/count_request/index.php';
     }
 
-    /**
-     * Crear nuevo count request
-     */
+    // Crear nuevo request
     public function create() {
         $tokens = $this->model->getTokens();
         $db_connection = $this->db;
@@ -42,16 +38,12 @@ class CountRequestController {
             if($this->model->create()) {
                 header("Location: index.php?controller=count_request&action=index");
                 exit();
-            } else {
-                $error = "Error al crear el request. Verifique que el token exista.";
             }
         }
         include_once 'views/count_request/create.php';
     }
 
-    /**
-     * Editar count request existente
-     */
+    // Editar request existente
     public function edit() {
         $this->model->id = $_GET['id'];
         $tokens = $this->model->getTokens();
@@ -66,8 +58,6 @@ class CountRequestController {
             if($this->model->update()) {
                 header("Location: index.php?controller=count_request&action=index");
                 exit();
-            } else {
-                $error = "Error al actualizar el request.";
             }
         } else {
             $this->model->readOne();
@@ -75,29 +65,13 @@ class CountRequestController {
         include_once 'views/count_request/edit.php';
     }
 
-    /**
-     * Eliminar count request
-     */
+    // Eliminar request permanentemente
     public function delete() {
         $this->model->id = $_GET['id'];
         if($this->model->delete()) {
             header("Location: index.php?controller=count_request&action=index");
             exit();
-        } else {
-            echo "Error al eliminar el request.";
         }
-    }
-
-    /**
-     * Función helper para obtener client_id desde token_id
-     */
-    public function getClientIdFromToken($tokenId) {
-        $tokenModel = new TokenApi($this->db);
-        $tokenModel->id = $tokenId;
-        if ($tokenModel->readOne()) {
-            return $tokenModel->id_client_api;
-        }
-        return $tokenId;
     }
 }
 ?>

@@ -25,33 +25,35 @@ class TokenApiController {
     }
 
     /**
-     * Crear nuevo token automáticamente
+     * Mostrar formulario y procesar creación de nuevo token
      */
     public function create() {
         $clientes = $this->model->getClientes();
+        $error = '';
         $db_connection = $this->db;
         
         if($_POST) {
             $this->model->id_client_api = $_POST['id_client_api'];
-            // Token y fecha se generan automáticamente en el modelo
+            // Token y fecha se generan automáticamente
             $this->model->estado = 1;
 
             if($this->model->create()) {
                 header("Location: index.php?controller=tokens_api&action=index");
                 exit();
             } else {
-                $error = "Error al crear el token. Verifique que el cliente exista.";
+                $error = 'Error al crear el token. Verifique que el cliente exista.';
             }
         }
         include_once 'views/tokens_api/create.php';
     }
 
     /**
-     * Editar token existente
+     * Mostrar formulario y procesar edición de token
      */
     public function edit() {
         $this->model->id = $_GET['id'];
         $clientes = $this->model->getClientes();
+        $error = '';
         $db_connection = $this->db;
         
         if($_POST) {
@@ -61,11 +63,16 @@ class TokenApiController {
             $this->model->fecha_registro = $_POST['fecha_registro'];
             $this->model->estado = $_POST['estado'];
 
-            if($this->model->update()) {
-                header("Location: index.php?controller=tokens_api&action=index");
-                exit();
+            // Validar token único excluyendo el actual
+            if ($this->model->tokenExists($this->model->token, $this->model->id)) {
+                $error = 'El token ya está en uso por otro registro';
             } else {
-                $error = "Error al actualizar el token.";
+                if($this->model->update()) {
+                    header("Location: index.php?controller=tokens_api&action=index");
+                    exit();
+                } else {
+                    $error = 'Error al actualizar el token';
+                }
             }
         } else {
             $this->model->readOne();
@@ -82,7 +89,7 @@ class TokenApiController {
             header("Location: index.php?controller=tokens_api&action=index");
             exit();
         } else {
-            echo "Error al eliminar el token.";
+            echo "<script>alert('Error al eliminar el token'); window.location.href='index.php?controller=tokens_api&action=index';</script>";
         }
     }
 }

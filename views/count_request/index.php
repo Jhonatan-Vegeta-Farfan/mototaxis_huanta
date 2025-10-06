@@ -87,6 +87,8 @@
                         <td>
                             <strong class="text-warning"><?php echo $row['razon_social']; ?></strong>
                             <br>
+                            <small class="text-muted">RUC: <?php echo $row['ruc']; ?></small>
+                            <br>
                             <small>
                                 <a href="index.php?controller=count_request&action=index&client_id=<?php echo $row['client_id']; ?>" 
                                    class="text-info">
@@ -95,7 +97,7 @@
                             </small>
                         </td>
                         <td>
-                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 15) . '...'; ?></code>
+                            <code class="text-light bg-dark p-1 rounded"><?php echo substr($row['token'], 0, 20) . '...'; ?></code>
                             <br>
                             <small>
                                 <a href="index.php?controller=count_request&action=index&token_id=<?php echo $row['id_token_api']; ?>" 
@@ -139,6 +141,7 @@
                                         data-token="<?php echo $row['token']; ?>"
                                         data-tipo="<?php echo $row['tipo']; ?>"
                                         data-fecha="<?php echo $row['fecha']; ?>"
+                                        data-ruc="<?php echo $row['ruc']; ?>"
                                         data-bs-toggle="tooltip" title="Ver Detalles">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -197,6 +200,10 @@
                                 <td id="modal-cliente"></td>
                             </tr>
                             <tr>
+                                <th>RUC:</th>
+                                <td id="modal-ruc"></td>
+                            </tr>
+                            <tr>
                                 <th>Tipo:</th>
                                 <td id="modal-tipo"></td>
                             </tr>
@@ -210,9 +217,9 @@
                                 <td id="modal-fecha"></td>
                             </tr>
                             <tr>
-                                <th>Token:</th>
+                                <th>Token Completo:</th>
                                 <td>
-                                    <code id="modal-token" class="bg-dark text-light p-1 rounded d-block"></code>
+                                    <code id="modal-token" class="bg-dark text-light p-1 rounded d-block" style="word-break: break-all; font-size: 0.8rem;"></code>
                                 </td>
                             </tr>
                         </table>
@@ -246,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             document.getElementById('modal-id').textContent = requestId;
             document.getElementById('modal-cliente').textContent = this.getAttribute('data-cliente');
+            document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
             document.getElementById('modal-token').textContent = this.getAttribute('data-token');
             document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
             
