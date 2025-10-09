@@ -49,341 +49,300 @@ if (empty($controller)) {
     include_once 'views/layouts/header.php';
     ?>
     
-    <!-- Dashboard Interactivo - Tema Turquesa -->
-    <div class="dashboard-turquesa">
-        <!-- Header con efecto partículas -->
-        <div class="hero-section">
-            <div class="particles-container" id="particles-js"></div>
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        <span class="gradient-text">MUNICIPALIDAD PROVINCIAL DE HUANTA</span>
-                    </h1>
-                    <p class="hero-subtitle">Sistema Inteligente de Gestión de Mototaxis</p>
-                </div>
-                <div class="user-welcome">
-                    <div class="user-avatar">
-                        <i class="fas fa-user-shield"></i>
+    <!-- Dashboard Corporativo -->
+    <div class="dashboard-corporativo">
+        <!-- Header Corporativo -->
+        <div class="header-corporativo">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="brand-section">
+                            <div class="municipal-logo">
+                                <i class="fas fa-landmark"></i>
+                            </div>
+                            <div class="brand-text">
+                                <h1 class="municipal-title">MUNICIPALIDAD PROVINCIAL DE HUANTA</h1>
+                                <p class="system-subtitle">Sistema de Gestión de Mototaxis</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="user-info">
-                        <span class="welcome-text">Bienvenido</span>
-                        <strong class="username"><?php echo $_SESSION['username']; ?></strong>
+                    <div class="col-md-6">
+                        <div class="user-section">
+                            <div class="user-info-corporate">
+                                <div class="user-avatar-corp">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="user-details">
+                                    <span class="user-welcome-corp">Bienvenido</span>
+                                    <strong class="username-corp"><?php echo $_SESSION['username']; ?></strong>
+                                    <span class="user-role">Administrador del Sistema</span>
+                                </div>
+                            </div>
+                            <a href="logout.php" class="logout-btn-corp">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </a>
+                        </div>
                     </div>
-                    <a href="logout.php" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
                 </div>
-            </div>
-            <div class="hero-waves">
-                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-                    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="currentColor"></path>
-                    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="currentColor"></path>
-                    <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="currentColor"></path>
-                </svg>
             </div>
         </div>
 
-        <!-- Stats Cards con Animaciones -->
-        <div class="stats-container">
-            <div class="stats-grid">
-                <!-- Tarjeta Empresas -->
-                <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="stat-icon">
+        <!-- Stats Cards Corporativas -->
+        <div class="stats-corporativas">
+            <div class="container-fluid">
+                <div class="section-header-corp">
+                    <h2 class="section-title-corp">PANEL DE CONTROL</h2>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Empresas -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="100">
+                            <div class="card-header-corp">
+                                <div class="card-icon-corp bg-primary">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="card-badge">Registradas</div>
+                            </div>
+                            <div class="card-body-corp">
+                                <h3 class="card-title-corp">EMPRESAS</h3>
+                                <div class="card-number-corp" data-count="<?php echo $totalEmpresas; ?>">0</div>
+                                <p class="card-desc-corp">Empresas de transporte registradas</p>
+                            </div>
+                            <div class="card-footer-corp">
+                                <a href="index.php?controller=empresas&action=index" class="btn-corp-primary">
+                                    <span>Gestionar</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mototaxis -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="200">
+                            <div class="card-header-corp">
+                                <div class="card-icon-corp bg-success">
+                                    <i class="fas fa-motorcycle"></i>
+                                </div>
+                                <div class="card-badge">Activos</div>
+                            </div>
+                            <div class="card-body-corp">
+                                <h3 class="card-title-corp">MOTOTAXIS</h3>
+                                <div class="card-number-corp" data-count="<?php echo $totalMototaxis; ?>">0</div>
+                                <p class="card-desc-corp">Vehículos en operación</p>
+                            </div>
+                            <div class="card-footer-corp">
+                                <a href="index.php?controller=mototaxis&action=index" class="btn-corp-primary">
+                                    <span>Gestionar</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clientes API -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="300">
+                            <div class="card-header-corp">
+                                <div class="card-icon-corp bg-info">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="card-badge">Conectados</div>
+                            </div>
+                            <div class="card-body-corp">
+                                <h3 class="card-title-corp">CLIENTES API</h3>
+                                <div class="card-number-corp" data-count="<?php echo $totalClientesApi; ?>">0</div>
+                                <p class="card-desc-corp">Clientes del servicio API</p>
+                            </div>
+                            <div class="card-footer-corp">
+                                <a href="index.php?controller=client_api&action=index" class="btn-corp-primary">
+                                    <span>Gestionar</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tokens API -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="400">
+                            <div class="card-header-corp">
+                                <div class="card-icon-corp bg-warning">
+                                    <i class="fas fa-key"></i>
+                                </div>
+                                <div class="card-badge">Activos</div>
+                            </div>
+                            <div class="card-body-corp">
+                                <h3 class="card-title-corp">TOKENS API</h3>
+                                <div class="card-number-corp" data-count="<?php echo $totalTokens; ?>">0</div>
+                                <p class="card-desc-corp">Tokens de acceso activos</p>
+                            </div>
+                            <div class="card-footer-corp">
+                                <a href="index.php?controller=tokens_api&action=index" class="btn-corp-primary">
+                                    <span>Gestionar</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requests -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="500">
+                            <div class="card-header-corp">
+                                <div class="card-icon-corp bg-secondary">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="card-badge">Procesadas</div>
+                            </div>
+                            <div class="card-body-corp">
+                                <h3 class="card-title-corp">SOLICITUDES</h3>
+                                <div class="card-number-corp" data-count="<?php echo $totalRequests; ?>">0</div>
+                                <p class="card-desc-corp">Solicitudes procesadas</p>
+                            </div>
+                            <div class="card-footer-corp">
+                                <a href="index.php?controller=count_request&action=index" class="btn-corp-primary">
+                                    <span>Gestionar</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Rápidas Corporativas -->
+        <div class="acciones-corporativas">
+            <div class="container-fluid">
+                <div class="section-header-corp">
+                    <h2 class="section-title-corp">ACCIONES RÁPIDAS</h2>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <a href="index.php?controller=empresas&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="100">
+                            <div class="action-icon-corp">
                                 <i class="fas fa-building"></i>
-                                <div class="icon-pulse"></div>
                             </div>
-                            <div class="stat-content">
-                                <h3 class="stat-title">EMPRESAS</h3>
-                                <div class="stat-number" data-count="<?php echo $totalEmpresas; ?>">0</div>
-                                <p class="stat-desc">Empresas registradas</p>
+                            <div class="action-content-corp">
+                                <h4>Nueva Empresa</h4>
+                                <p>Registrar nueva empresa de transporte</p>
                             </div>
-                            <div class="stat-badge">ACTIVAS</div>
-                        </div>
-                        <div class="card-back">
-                            <div class="action-btn">
-                                <a href="index.php?controller=empresas&action=index" class="btn-turquesa">
-                                    <span>Gestionar</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
+                            <div class="action-arrow-corp">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    <div class="card-glow"></div>
-                </div>
 
-                <!-- Tarjeta Mototaxis -->
-                <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="stat-icon">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <a href="index.php?controller=mototaxis&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="200">
+                            <div class="action-icon-corp">
                                 <i class="fas fa-motorcycle"></i>
-                                <div class="icon-pulse"></div>
                             </div>
-                            <div class="stat-content">
-                                <h3 class="stat-title">MOTOTAXIS</h3>
-                                <div class="stat-number" data-count="<?php echo $totalMototaxis; ?>">0</div>
-                                <p class="stat-desc">Mototaxis activos</p>
+                            <div class="action-content-corp">
+                                <h4>Nuevo Mototaxi</h4>
+                                <p>Registrar nuevo vehículo</p>
                             </div>
-                            <div class="stat-badge">ONLINE</div>
-                        </div>
-                        <div class="card-back">
-                            <div class="action-btn">
-                                <a href="index.php?controller=mototaxis&action=index" class="btn-turquesa">
-                                    <span>Gestionar</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
+                            <div class="action-arrow-corp">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    <div class="card-glow"></div>
-                </div>
 
-                <!-- Tarjeta Clientes API -->
-                <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                                <div class="icon-pulse"></div>
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <a href="index.php?controller=client_api&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="300">
+                            <div class="action-icon-corp">
+                                <i class="fas fa-user-plus"></i>
                             </div>
-                            <div class="stat-content">
-                                <h3 class="stat-title">CLIENTES API</h3>
-                                <div class="stat-number" data-count="<?php echo $totalClientesApi; ?>">0</div>
-                                <p class="stat-desc">Clientes conectados</p>
+                            <div class="action-content-corp">
+                                <h4>Nuevo Cliente API</h4>
+                                <p>Crear nuevo cliente del servicio</p>
                             </div>
-                            <div class="stat-badge">CONECTADOS</div>
-                        </div>
-                        <div class="card-back">
-                            <div class="action-btn">
-                                <a href="index.php?controller=client_api&action=index" class="btn-turquesa">
-                                    <span>Gestionar</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
+                            <div class="action-arrow-corp">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    <div class="card-glow"></div>
-                </div>
 
-                <!-- Tarjeta Tokens API -->
-                <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="stat-icon">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <a href="index.php?controller=tokens_api&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="400">
+                            <div class="action-icon-corp">
                                 <i class="fas fa-key"></i>
-                                <div class="icon-pulse"></div>
                             </div>
-                            <div class="stat-content">
-                                <h3 class="stat-title">TOKENS API</h3>
-                                <div class="stat-number" data-count="<?php echo $totalTokens; ?>">0</div>
-                                <p class="stat-desc">Tokens activos</p>
+                            <div class="action-content-corp">
+                                <h4>Nuevo Token</h4>
+                                <p>Generar token de acceso</p>
                             </div>
-                            <div class="stat-badge">ACTIVOS</div>
-                        </div>
-                        <div class="card-back">
-                            <div class="action-btn">
-                                <a href="index.php?controller=tokens_api&action=index" class="btn-turquesa">
-                                    <span>Gestionar</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
+                            <div class="action-arrow-corp">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    <div class="card-glow"></div>
-                </div>
-
-                <!-- Tarjeta Requests -->
-                <div class="stat-card" data-aos="fade-up" data-aos-delay="500">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="stat-icon">
-                                <i class="fas fa-chart-bar"></i>
-                                <div class="icon-pulse"></div>
-                            </div>
-                            <div class="stat-content">
-                                <h3 class="stat-title">REQUESTS</h3>
-                                <div class="stat-number" data-count="<?php echo $totalRequests; ?>">0</div>
-                                <p class="stat-desc">Solicitudes procesadas</p>
-                            </div>
-                            <div class="stat-badge">PROCESADAS</div>
-                        </div>
-                        <div class="card-back">
-                            <div class="action-btn">
-                                <a href="index.php?controller=count_request&action=index" class="btn-turquesa">
-                                    <span>Gestionar</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-glow"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions Mejorado -->
-        <div class="quick-actions-modern">
-            <div class="section-header">
-                <div class="section-title">
-                    <div class="title-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <h2>ACCIONES RÁPIDAS</h2>
-                </div>
-                <div class="section-subtitle">Gestiona tu sistema de forma eficiente</div>
-            </div>
-            
-            <div class="actions-grid-modern">
-                <a href="index.php?controller=empresas&action=create" class="action-card" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="action-content">
-                        <div class="action-icon-wrapper">
-                            <i class="fas fa-building"></i>
-                            <div class="action-shine"></div>
-                        </div>
-                        <h3>Nueva Empresa</h3>
-                        <p>Registrar nueva empresa de mototaxis</p>
-                        <div class="action-arrow">
-                            <i class="fas fa-arrow-right"></i>
+        <!-- Estado del Sistema -->
+        <div class="estado-sistema">
+            <div class="container-fluid">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="status-card-corp" data-aos="fade-right">
+                            <div class="status-icon online">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="status-content">
+                                <h5>Servidor Principal</h5>
+                                <span class="status-text online">Operativo</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="action-hover-effect"></div>
-                </a>
-
-                <a href="index.php?controller=mototaxis&action=create" class="action-card" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="action-content">
-                        <div class="action-icon-wrapper">
-                            <i class="fas fa-motorcycle"></i>
-                            <div class="action-shine"></div>
-                        </div>
-                        <h3>Nuevo Mototaxi</h3>
-                        <p>Agregar nuevo vehículo al sistema</p>
-                        <div class="action-arrow">
-                            <i class="fas fa-arrow-right"></i>
+                    <div class="col-md-4">
+                        <div class="status-card-corp" data-aos="fade-right" data-aos-delay="100">
+                            <div class="status-icon online">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="status-content">
+                                <h5>Base de Datos</h5>
+                                <span class="status-text online">Conectada</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="action-hover-effect"></div>
-                </a>
-
-                <a href="index.php?controller=client_api&action=create" class="action-card" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="action-content">
-                        <div class="action-icon-wrapper">
-                            <i class="fas fa-user-plus"></i>
-                            <div class="action-shine"></div>
-                        </div>
-                        <h3>Nuevo Cliente</h3>
-                        <p>Crear nuevo cliente API</p>
-                        <div class="action-arrow">
-                            <i class="fas fa-arrow-right"></i>
+                    <div class="col-md-4">
+                        <div class="status-card-corp" data-aos="fade-right" data-aos-delay="200">
+                            <div class="status-icon online">
+                                <i class="fas fa-plug"></i>
+                            </div>
+                            <div class="status-content">
+                                <h5>Servicio API</h5>
+                                <span class="status-text online">Activo</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="action-hover-effect"></div>
-                </a>
-
-                <a href="index.php?controller=tokens_api&action=create" class="action-card" data-aos="zoom-in" data-aos-delay="400">
-                    <div class="action-content">
-                        <div class="action-icon-wrapper">
-                            <i class="fas fa-key"></i>
-                            <div class="action-shine"></div>
-                        </div>
-                        <h3>Nuevo Token</h3>
-                        <p>Generar nuevo token de acceso</p>
-                        <div class="action-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="action-hover-effect"></div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Live Stats Mejorado -->
-        <div class="live-stats-modern">
-            <div class="live-stat-item" data-aos="fade-right">
-                <div class="live-stat-icon">
-                    <i class="fas fa-sync-alt fa-spin"></i>
-                </div>
-                <div class="live-stat-content">
-                    <span class="live-stat-title">Sistema Activo</span>
-                    <span class="live-stat-value">Operacional</span>
-                </div>
-            </div>
-            
-            <div class="live-stat-item" data-aos="fade-right" data-aos-delay="100">
-                <div class="live-stat-icon">
-                    <i class="fas fa-database"></i>
-                </div>
-                <div class="live-stat-content">
-                    <span class="live-stat-title">Mototaxis Online</span>
-                    <span class="live-stat-value"><?php echo $totalMototaxis; ?> Activos</span>
-                </div>
-            </div>
-            
-            <div class="live-stat-item" data-aos="fade-right" data-aos-delay="200">
-                <div class="live-stat-icon">
-                    <i class="fas fa-signal"></i>
-                </div>
-                <div class="live-stat-content">
-                    <span class="live-stat-title">API Status</span>
-                    <span class="live-stat-value live-status-online">Operativa</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts para Interactividad -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
-    // Inicializar AOS (Animate On Scroll)
+    // Inicializar AOS
     AOS.init({
-        duration: 1000,
+        duration: 800,
         once: true,
         offset: 100
     });
 
-    // Inicializar Partículas
-    particlesJS('particles-js', {
-        particles: {
-            number: { value: 80, density: { enable: true, value_area: 800 } },
-            color: { value: "#40E0D0" },
-            shape: { type: "circle" },
-            opacity: { value: 0.5, random: true },
-            size: { value: 3, random: true },
-            line_linked: {
-                enable: true,
-                distance: 150,
-                color: "#40E0D0",
-                opacity: 0.4,
-                width: 1
-            },
-            move: {
-                enable: true,
-                speed: 2,
-                direction: "none",
-                random: true,
-                straight: false,
-                out_mode: "out",
-                bounce: false
-            }
-        },
-        interactivity: {
-            detect_on: "canvas",
-            events: {
-                onhover: { enable: true, mode: "repulse" },
-                onclick: { enable: true, mode: "push" },
-                resize: true
-            }
-        }
-    });
-
     // Animación de contadores
     function animateCounters() {
-        const counters = document.querySelectorAll('.stat-number');
+        const counters = document.querySelectorAll('.card-number-corp');
         counters.forEach(counter => {
             const target = +counter.getAttribute('data-count');
-            const duration = 2000;
+            const duration = 1500;
             const step = target / (duration / 16);
             let current = 0;
             
@@ -404,583 +363,448 @@ if (empty($controller)) {
     document.addEventListener('DOMContentLoaded', function() {
         animateCounters();
         
-        // Efecto hover para tarjetas
-        const statCards = document.querySelectorAll('.stat-card');
+        // Efectos hover para tarjetas
+        const statCards = document.querySelectorAll('.stat-card-corp');
         statCards.forEach(card => {
             card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-10px) scale(1.02)';
+                this.style.transform = 'translateY(-5px)';
             });
             
             card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
+                this.style.transform = 'translateY(0)';
             });
         });
     });
     </script>
 
     <style>
-    .dashboard-turquesa {
-        background: linear-gradient(135deg, #0c1a27 0%, #0d2b3a 50%, #0f3a4a 100%);
+    .dashboard-corporativo {
+        background: #f8f9fa;
         min-height: 100vh;
-        padding: 0;
-        position: relative;
-        overflow-x: hidden;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Hero Section */
-    .hero-section {
-        background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
-        padding: 60px 40px 120px;
-        position: relative;
-        overflow: hidden;
+    /* Header Corporativo */
+    .header-corporativo {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 20px 0;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        border-bottom: 4px solid #2a5298;
     }
 
-    .particles-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-
-    .hero-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        z-index: 10;
-    }
-
-    .hero-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 10px;
-    }
-
-    .gradient-text {
-        background: linear-gradient(45deg, #fff 30%, #e0f7fa 70%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .hero-subtitle {
-        color: rgba(255,255,255,0.9);
-        font-size: 1.2rem;
-        font-weight: 300;
-    }
-
-    .user-welcome {
+    .brand-section {
         display: flex;
         align-items: center;
+    }
+
+    .municipal-logo {
+        width: 60px;
+        height: 60px;
         background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        padding: 15px 20px;
-        border-radius: 15px;
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .user-avatar {
-        width: 50px;
-        height: 50px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-right: 15px;
+        border: 2px solid rgba(255,255,255,0.2);
     }
 
-    .user-avatar i {
-        font-size: 1.5rem;
+    .municipal-logo i {
+        font-size: 2rem;
         color: #fff;
     }
 
-    .user-info {
+    .municipal-title {
+        color: #fff;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .system-subtitle {
+        color: rgba(255,255,255,0.9);
+        font-size: 0.9rem;
+        margin: 5px 0 0 0;
+        font-weight: 300;
+    }
+
+    .user-section {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 20px;
+    }
+
+    .user-info-corporate {
+        display: flex;
+        align-items: center;
+        background: rgba(255,255,255,0.1);
+        padding: 12px 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .user-avatar-corp {
+        width: 45px;
+        height: 45px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+
+    .user-avatar-corp i {
+        font-size: 1.2rem;
+        color: #fff;
+    }
+
+    .user-details {
         display: flex;
         flex-direction: column;
     }
 
-    .welcome-text {
+    .user-welcome-corp {
         color: rgba(255,255,255,0.8);
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
 
-    .username {
+    .username-corp {
         color: #fff;
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
     }
 
-    .logout-btn {
-        width: 40px;
-        height: 40px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        text-decoration: none;
-        margin-left: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .logout-btn:hover {
-        background: rgba(255,255,255,0.3);
-        transform: scale(1.1);
-    }
-
-    .hero-waves {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        overflow: hidden;
-        line-height: 0;
-    }
-
-    .hero-waves svg {
-        position: relative;
-        display: block;
-        width: calc(100% + 1.3px);
-        height: 80px;
-        transform: rotateY(180deg);
-    }
-
-    .hero-waves path {
-        fill: #0c1a27;
-    }
-
-    /* Stats Container */
-    .stats-container {
-        padding: 40px;
-        margin-top: -80px;
-        position: relative;
-        z-index: 20;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
-    }
-
-    .stat-card {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 5px;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(64, 224, 208, 0.2);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer;
-        height: 160px;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-10px) scale(1.02);
-        border-color: rgba(64, 224, 208, 0.5);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-
-    .card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        transition: transform 0.6s;
-        transform-style: preserve-3d;
-    }
-
-    .stat-card:hover .card-inner {
-        transform: rotateY(180deg);
-    }
-
-    .card-front, .card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden;
-        border-radius: 15px;
-        padding: 25px;
-        display: flex;
-        align-items: center;
-    }
-
-    .card-front {
-        background: rgba(255,255,255,0.05);
-    }
-
-    .card-back {
-        background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
-        transform: rotateY(180deg);
-        justify-content: center;
-        align-items: center;
-    }
-
-    .stat-icon {
-        position: relative;
-        font-size: 2.5rem;
-        margin-right: 20px;
-        width: 80px;
-        height: 80px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 15px;
-        background: rgba(64, 224, 208, 0.1);
-        color: #40E0D0;
-    }
-
-    .icon-pulse {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 15px;
-        background: rgba(64, 224, 208, 0.2);
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
-    }
-
-    .stat-content {
-        flex: 1;
-    }
-
-    .stat-title {
-        color: #40E0D0;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .stat-number {
-        color: #fff;
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 5px;
-    }
-
-    .stat-desc {
+    .user-role {
         color: rgba(255,255,255,0.7);
-        font-size: 0.85rem;
-        margin: 0;
+        font-size: 0.75rem;
     }
 
-    .stat-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(64, 224, 208, 0.2);
-        color: #40E0D0;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .btn-turquesa {
+    .logout-btn-corp {
         display: flex;
         align-items: center;
-        background: rgba(255,255,255,0.2);
+        gap: 8px;
+        background: rgba(255,255,255,0.1);
         color: #fff;
-        padding: 12px 20px;
-        border-radius: 10px;
+        padding: 10px 15px;
+        border-radius: 8px;
         text-decoration: none;
-        font-weight: 600;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1px solid rgba(255,255,255,0.2);
         transition: all 0.3s ease;
     }
 
-    .btn-turquesa:hover {
-        background: rgba(255,255,255,0.3);
+    .logout-btn-corp:hover {
+        background: rgba(255,255,255,0.2);
         color: #fff;
         text-decoration: none;
-        transform: translateX(5px);
     }
 
-    .btn-turquesa i {
-        margin-left: 8px;
+    /* Stats Corporativas */
+    .stats-corporativas {
+        padding: 40px 0;
+        background: #fff;
     }
 
-    .card-glow {
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100px;
-        height: 100px;
-        background: radial-gradient(circle, rgba(64, 224, 208, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .stat-card:hover .card-glow {
-        opacity: 1;
-    }
-
-    /* Quick Actions Modern */
-    .quick-actions-modern {
-        padding: 0 40px 40px;
-    }
-
-    .section-header {
+    .section-header-corp {
         text-align: center;
         margin-bottom: 40px;
     }
 
-    .section-title {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .section-title-corp {
+        color: #1e3c72;
+        font-size: 2rem;
+        font-weight: 700;
         margin-bottom: 10px;
     }
 
-    .title-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 15px;
-    }
-
-    .title-icon i {
-        font-size: 1.5rem;
-        color: #fff;
-    }
-
-    .section-title h2 {
-        color: #fff;
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-    }
-
-    .section-subtitle {
-        color: rgba(255,255,255,0.7);
+    .section-desc-corp {
+        color: #6c757d;
         font-size: 1.1rem;
     }
 
-    .actions-grid-modern {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 25px;
-    }
-
-    .action-card {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        text-decoration: none;
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(64, 224, 208, 0.1);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .action-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(64, 224, 208, 0.4);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-        color: #fff;
-        text-decoration: none;
-    }
-
-    .action-content {
-        position: relative;
-        z-index: 2;
-    }
-
-    .action-icon-wrapper {
-        position: relative;
-        width: 70px;
-        height: 70px;
-        background: rgba(64, 224, 208, 0.1);
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-
-    .action-icon-wrapper i {
-        font-size: 2rem;
-        color: #40E0D0;
-    }
-
-    .action-shine {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        width: 20px;
-        height: 20px;
+    .stat-card-corp {
         background: #fff;
-        border-radius: 50%;
-        opacity: 0.3;
-        animation: shine 3s infinite;
-    }
-
-    @keyframes shine {
-        0%, 100% { transform: scale(0.5); opacity: 0.3; }
-        50% { transform: scale(1); opacity: 0.6; }
-    }
-
-    .action-card h3 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .action-card p {
-        color: rgba(255,255,255,0.7);
-        margin-bottom: 20px;
-        font-size: 0.9rem;
-    }
-
-    .action-arrow {
-        width: 40px;
-        height: 40px;
-        background: rgba(64, 224, 208, 0.2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-    }
-
-    .action-card:hover .action-arrow {
-        background: rgba(64, 224, 208, 0.4);
-        transform: translateX(5px);
-    }
-
-    .action-hover-effect {
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(64, 224, 208, 0.1), transparent);
-        transition: left 0.5s;
-    }
-
-    .action-card:hover .action-hover-effect {
-        left: 100%;
-    }
-
-    /* Live Stats Modern */
-    .live-stats-modern {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        flex-wrap: wrap;
-        padding: 0 40px 40px;
-    }
-
-    .live-stat-item {
-        display: flex;
-        align-items: center;
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        padding: 20px 25px;
         border-radius: 15px;
-        border: 1px solid rgba(64, 224, 208, 0.1);
-        min-width: 250px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
         transition: all 0.3s ease;
-    }
-
-    .live-stat-item:hover {
-        border-color: rgba(64, 224, 208, 0.3);
-        transform: translateY(-5px);
-    }
-
-    .live-stat-icon {
-        width: 50px;
-        height: 50px;
-        background: rgba(64, 224, 208, 0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 15px;
-    }
-
-    .live-stat-icon i {
-        font-size: 1.3rem;
-        color: #40E0D0;
-    }
-
-    .live-stat-content {
+        height: 100%;
         display: flex;
         flex-direction: column;
     }
 
-    .live-stat-title {
-        color: rgba(255,255,255,0.8);
+    .stat-card-corp:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border-color: #1e3c72;
+    }
+
+    .card-header-corp {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .card-icon-corp {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.5rem;
+    }
+
+    .card-icon-corp.bg-primary { background: linear-gradient(135deg, #007bff, #0056b3); }
+    .card-icon-corp.bg-success { background: linear-gradient(135deg, #28a745, #1e7e34); }
+    .card-icon-corp.bg-info { background: linear-gradient(135deg, #17a2b8, #138496); }
+    .card-icon-corp.bg-warning { background: linear-gradient(135deg, #ffc107, #e0a800); }
+    .card-icon-corp.bg-secondary { background: linear-gradient(135deg, #6c757d, #545b62); }
+
+    .card-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .card-body-corp {
+        flex: 1;
+        margin-bottom: 20px;
+    }
+
+    .card-title-corp {
+        color: #495057;
         font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    .card-number-corp {
+        color: #1e3c72;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        line-height: 1;
+    }
+
+    .card-desc-corp {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .card-footer-corp {
+        border-top: 1px solid #e9ecef;
+        padding-top: 20px;
+    }
+
+    .btn-corp-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1e3c72;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-corp-primary:hover {
+        background: #2a5298;
+        color: #fff;
+        text-decoration: none;
+        transform: translateX(3px);
+    }
+
+    /* Acciones Corporativas */
+    .acciones-corporativas {
+        padding: 40px 0;
+        background: #f8f9fa;
+    }
+
+    .action-card-corp {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #495057;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .action-card-corp:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        color: #495057;
+        text-decoration: none;
+        border-color: #1e3c72;
+    }
+
+    .action-icon-corp {
+        width: 50px;
+        height: 50px;
+        background: #e9ecef;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #1e3c72;
+        font-size: 1.3rem;
+        transition: all 0.3s ease;
+    }
+
+    .action-card-corp:hover .action-icon-corp {
+        background: #1e3c72;
+        color: #fff;
+    }
+
+    .action-content-corp {
+        flex: 1;
+    }
+
+    .action-content-corp h4 {
+        color: #1e3c72;
+        font-size: 1.1rem;
+        font-weight: 600;
         margin-bottom: 5px;
     }
 
-    .live-stat-value {
-        color: #fff;
-        font-weight: 600;
-        font-size: 1.1rem;
+    .action-content-corp p {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin: 0;
     }
 
-    .live-status-online {
-        color: #40E0D0 !important;
+    .action-arrow-corp {
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    .action-card-corp:hover .action-arrow-corp {
+        color: #1e3c72;
+        transform: translateX(5px);
+    }
+
+    /* Estado del Sistema */
+    .estado-sistema {
+        padding: 40px 0;
+        background: #fff;
+    }
+
+    .status-card-corp {
+        display: flex;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .status-card-corp:hover {
+        border-color: #1e3c72;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    }
+
+    .status-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-size: 1.3rem;
+    }
+
+    .status-icon.online {
+        background: #d4edda;
+        color: #28a745;
+    }
+
+    .status-content h5 {
+        color: #495057;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .status-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .status-text.online {
+        color: #28a745;
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-        .hero-content {
-            flex-direction: column;
+        .header-corporativo {
+            padding: 15px 0;
+        }
+        
+        .brand-section {
+            justify-content: center;
             text-align: center;
+            margin-bottom: 15px;
         }
         
-        .user-welcome {
-            margin-top: 20px;
+        .user-section {
+            justify-content: center;
         }
         
-        .hero-title {
+        .municipal-title {
+            font-size: 1.2rem;
+        }
+        
+        .section-title-corp {
+            font-size: 1.5rem;
+        }
+        
+        .card-number-corp {
             font-size: 2rem;
         }
         
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .actions-grid-modern {
-            grid-template-columns: 1fr;
-        }
-        
-        .stats-container,
-        .quick-actions-modern,
-        .live-stats-modern {
+        .action-card-corp {
             padding: 20px;
         }
-        
-        .live-stats-modern {
+    }
+
+    @media (max-width: 576px) {
+        .user-info-corporate {
             flex-direction: column;
-            align-items: center;
+            text-align: center;
+            padding: 15px;
         }
         
-        .live-stat-item {
-            width: 100%;
-            max-width: 300px;
+        .user-avatar-corp {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+        
+        .logout-btn-corp span {
+            display: none;
         }
     }
     </style>

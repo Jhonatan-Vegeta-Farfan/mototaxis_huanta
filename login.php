@@ -14,7 +14,7 @@ if ($_POST) {
     $password = $_POST['password'] ?? '';
     
     // Credenciales hardcodeadas
-    $valid_username = 'vegeta';
+    $valid_username = 'jhonatan';
     $valid_password = '123456789';
     
     if ($username === $valid_username && $password === $valid_password) {
