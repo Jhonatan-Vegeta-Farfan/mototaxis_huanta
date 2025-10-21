@@ -206,15 +206,15 @@ function realizarBusqueda() {
     
     switch(searchType) {
         case 'numero':
-            params = `numero=${encodeURIComponent(searchTerm)}`;
+            params = `numero=${encodeURIComponent(searchTerm)}&token=${encodeURIComponent(token)}`;
             url = `api.php?action=buscar&${params}`;
             break;
         case 'dni':
-            params = `dni=${encodeURIComponent(searchTerm)}`;
+            params = `dni=${encodeURIComponent(searchTerm)}&token=${encodeURIComponent(token)}`;
             url = `api.php?action=buscarDni&${params}`;
             break;
         case 'todos':
-            params = `pagina=${currentPage}&por_pagina=${perPage}`;
+            params = `pagina=${currentPage}&por_pagina=${perPage}&token=${encodeURIComponent(token)}`;
             url = `api.php?action=listar&${params}`;
             break;
     }
@@ -224,7 +224,6 @@ function realizarBusqueda() {
     fetch(url, {
         method: 'GET',
         headers: {
-            'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'
         }
     })
@@ -277,10 +276,11 @@ function validarToken() {
     ocultarError();
     ocultarResultados();
     
-    fetch('api.php?action=validar', {
+    const url = `api.php?action=validar&token=${encodeURIComponent(token)}`;
+    
+    fetch(url, {
         method: 'GET',
         headers: {
-            'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'
         }
     })

@@ -247,6 +247,11 @@ class ApiPublicController {
         $token = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         $token = str_replace('Bearer ', '', $token);
         
+        // Si no hay token en el header, intentar obtenerlo de los parámetros GET
+        if (empty($token)) {
+            $token = $_GET['token'] ?? '';
+        }
+        
         if (empty($token)) {
             http_response_code(401);
             echo json_encode([

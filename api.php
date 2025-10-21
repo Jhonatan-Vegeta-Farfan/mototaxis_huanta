@@ -15,10 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Limpiar cualquier salida anterior
+ob_clean();
+
 try {
-    // Configuración
-    require_once 'config/database.php';
-    require_once 'controllers/ApiPublicController.php';
+    // Configuración - usar rutas absolutas
+    require_once __DIR__ . '/config/database.php';
+    require_once __DIR__ . '/controllers/ApiPublicController.php';
 
     // Conexión a la base de datos
     $database = new Database();
@@ -34,7 +37,7 @@ try {
     // Obtener acción
     $action = isset($_GET['action']) ? $_GET['action'] : '';
 
-    // Ejecutar acción correspondiente - CORREGIDO
+    // Ejecutar acción correspondiente
     switch($action) {
         case 'validar':
             $apiController->validarTokenEndpoint();
@@ -48,16 +51,6 @@ try {
         case 'buscarDni':
             $apiController->buscarPorDNI();
             break;
-        case 'ver':
-            $id = isset($_GET['id']) ? $_GET['id'] : '';
-            // Este método no está implementado, mostrar error
-            http_response_code(501);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Endpoint no implementado',
-                'timestamp' => date('Y-m-d H:i:s')
-            ]);
-            break;
         default:
             // Documentación del API
             $documentacion = [
@@ -68,45 +61,40 @@ try {
                 'endpoints' => [
                     'validar' => [
                         'method' => 'GET',
-                        'parameters' => [],
+                        'parameters' => ['token'],
                         'description' => 'Valida token y devuelve información del cliente',
-                        'headers' => ['Authorization: Bearer [TOKEN]'],
-                        'example' => '/api.php?action=validar'
+                        'example' => '/api.php?action=validar&token=TU_TOKEN'
                     ],
                     'listar' => [
                         'method' => 'GET',
-                        'parameters' => ['pagina', 'por_pagina'],
+                        'parameters' => ['token', 'pagina', 'por_pagina'],
                         'description' => 'Lista mototaxis con paginación',
-                        'headers' => ['Authorization: Bearer [TOKEN]'],
-                        'example' => '/api.php?action=listar&pagina=1&por_pagina=10'
+                        'example' => '/api.php?action=listar&token=TU_TOKEN&pagina=1&por_pagina=10'
                     ],
                     'buscar' => [
                         'method' => 'GET',
-                        'parameters' => ['numero'],
+                        'parameters' => ['token', 'numero'],
                         'description' => 'Busca mototaxi por número asignado',
-                        'headers' => ['Authorization: Bearer [TOKEN]'],
-                        'example' => '/api.php?action=buscar&numero=01'
+                        'example' => '/api.php?action=buscar&token=TU_TOKEN&numero=01'
                     ],
                     'buscarDni' => [
                         'method' => 'GET',
-                        'parameters' => ['dni'],
+                        'parameters' => ['token', 'dni'],
                         'description' => 'Busca mototaxis por DNI del conductor',
-                        'headers' => ['Authorization: Bearer [TOKEN]'],
-                        'example' => '/api.php?action=buscarDni&dni=72358506'
+                        'example' => '/api.php?action=buscarDni&token=TU_TOKEN&dni=72358506'
                     ]
-                ],
-                'autenticacion' => [
-                    'tipo' => 'Bearer Token',
-                    'header' => 'Authorization: Bearer [token]',
-                    'obtener_token' => 'Contactar con administración'
                 ]
             ];
             
-            echo json_encode($documentacion, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            echo json_encode($documentacion, JSON_UNESCAPED_UNICODE);
+            exit; // IMPORTANTE: Salir después de enviar JSON
             break;
     }
 
 } catch (Exception $e) {
+    // Limpiar buffer antes del error
+    if (ob_get_length()) ob_clean();
+    
     // Manejar errores de manera limpia
     http_response_code(500);
     $errorResponse = [
@@ -123,4 +111,7 @@ try {
     echo json_encode($errorResponse, JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+// Asegurar que no haya salida después
+exit;
 ?>

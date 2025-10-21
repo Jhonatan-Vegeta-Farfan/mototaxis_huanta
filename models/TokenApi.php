@@ -43,7 +43,7 @@ class TokenApi {
     }
 
     /**
-     * Obtener token por valor
+     * Obtener token por valor - CORREGIDO
      */
     public function getByToken($token) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE token = ? LIMIT 0,1";
