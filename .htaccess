@@ -1,0 +1,24 @@
+RewriteEngine On
+RewriteBase /mototaxis_huanta/
+
+# Habilitar rewrite
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /mototaxis_huanta/
+
+    # API PÚBLICA - Redirección correcta
+    RewriteRule ^api/public$ api.php [QSA,L]
+    RewriteRule ^api/public/listar$ api.php?action=listar [QSA,L]
+    RewriteRule ^api/public/buscar$ api.php?action=buscar [QSA,L]
+    RewriteRule ^api/public/buscar-dni$ api.php?action=buscarDni [QSA,L]
+    RewriteRule ^api/public/validar$ api.php?action=validar [QSA,L]
+    RewriteRule ^api/public/documentacion$ views/api_public/documentacion.php [L]
+
+    # Vista pública del API
+    RewriteRule ^consulta-mototaxis$ views/api_public/index.php [L]
+    RewriteRule ^api/consulta$ views/api_public/index.php [L]
+
+    # Reglas existentes para el sistema administrativo
+    RewriteRule ^admin/(.*)$ index.php?controller=$1 [QSA,L]
+    RewriteRule ^([^/]+)/([^/]+)$ index.php?controller=$1&action=$2 [QSA,L]
+</IfModule>
