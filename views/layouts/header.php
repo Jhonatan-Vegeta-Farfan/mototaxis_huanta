@@ -6,6 +6,7 @@
     <title>Sistema Mototaxis Huanta</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/styles.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #1e3c72;
@@ -284,6 +285,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="index.php?controller=count_request&action=index">
                                 <i class="fas fa-chart-bar"></i> Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?controller=api_public&action=index">
+                                <i class="fas fa-code"></i> API Público
                             </a>
                         </li>
                     </ul>

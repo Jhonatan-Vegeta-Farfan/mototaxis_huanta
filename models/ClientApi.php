@@ -26,6 +26,37 @@ class ClientApi {
     }
 
     /**
+     * Leer un cliente API específico por ID
+     */
+    public function readOne($id = null) {
+        if ($id) {
+            $this->id = $id;
+        }
+        
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        
+        try {
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $this->ruc = $row['ruc'];
+                $this->razon_social = $row['razon_social'];
+                $this->telefono = $row['telefono'];
+                $this->correo = $row['correo'];
+                $this->fecha_registro = $row['fecha_registro'];
+                $this->estado = $row['estado'];
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en readOne: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Búsqueda simple por RUC o Razón Social
      */
     public function search($keywords) {
@@ -152,29 +183,6 @@ class ClientApi {
         $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Leer un cliente API específico por ID
-     */
-    public function readOne() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        $stmt->execute();
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if($row) {
-            $this->ruc = $row['ruc'];
-            $this->razon_social = $row['razon_social'];
-            $this->telefono = $row['telefono'];
-            $this->correo = $row['correo'];
-            $this->fecha_registro = $row['fecha_registro'];
-            $this->estado = $row['estado'];
             return true;
         }
         return false;

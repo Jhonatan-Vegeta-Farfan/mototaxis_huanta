@@ -256,7 +256,11 @@ if ($_POST) {
                             </button>
                         </form>
                         
-                        
+                        <div class="credential-info mt-4">
+                            <h6 class="text-warning"><i class="fas fa-info-circle me-2"></i>Credenciales de Prueba</h6>
+                            <p class="mb-1"><strong>Usuario:</strong> jhonatan</p>
+                            <p class="mb-0"><strong>Contraseña:</strong> 123456789</p>
+                        </div>
                     </div>
                 </div>
             </div>

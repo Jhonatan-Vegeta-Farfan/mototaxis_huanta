@@ -14,13 +14,12 @@ class TokenApi {
     }
 
     /**
-     * Leer todos los tokens activos con información del cliente
+     * Leer todos los tokens API
      */
     public function read() {
         $query = "SELECT t.*, c.razon_social, c.ruc
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.estado = 1 
                  ORDER BY t.id DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -34,7 +33,7 @@ class TokenApi {
         $query = "SELECT t.*, c.razon_social, c.ruc
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.id_client_api = ? AND t.estado = 1
+                 WHERE t.id_client_api = ?
                  ORDER BY t.id DESC";
         
         $stmt = $this->conn->prepare($query);
@@ -44,29 +43,88 @@ class TokenApi {
     }
 
     /**
+     * Obtener token por valor
+     */
+    public function getByToken($token) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE token = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token);
+        
+        try {
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en getByToken: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Leer un token específico por ID
+     */
+    public function readOne($id = null) {
+        if ($id) {
+            $this->id = $id;
+        }
+        
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        
+        try {
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $this->id_client_api = $row['id_client_api'];
+                $this->token = $row['token'];
+                $this->fecha_registro = $row['fecha_registro'];
+                $this->estado = $row['estado'];
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en readOne: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Generar token automático único para el cliente
      */
     public function generateToken($client_id) {
-        $clientModel = new ClientApi($this->conn);
-        $clientModel->id = $client_id;
+        // Primero obtener información del cliente
+        $query = "SELECT razon_social, ruc FROM client_api WHERE id = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
         
-        if ($clientModel->readOne()) {
-            $token_count = $clientModel->countTokens($client_id);
+        if ($stmt->rowCount() > 0) {
+            $client = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Contar tokens existentes del cliente
+            $countQuery = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
+            $countStmt = $this->conn->prepare($countQuery);
+            $countStmt->bindParam(1, $client_id);
+            $countStmt->execute();
+            $tokenCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'] + 1;
             
             // Generar token base aleatorio
             $base_token = bin2hex(random_bytes(16)); // 32 caracteres hexadecimales
             
             // Crear identificador del cliente (primeras 3 letras de razón social)
-            $client_identifier = substr($clientModel->razon_social, 0, 3);
+            $client_identifier = substr($client['razon_social'], 0, 3);
             $client_identifier = preg_replace('/[^a-zA-Z0-9]/', '', $client_identifier);
             $client_identifier = strtoupper($client_identifier);
             
             // Si el identificador está vacío, usar RUC
             if (empty($client_identifier)) {
-                $client_identifier = substr($clientModel->ruc, 0, 3);
+                $client_identifier = substr($client['ruc'], 0, 3);
             }
             
-            return $base_token . '-' . $client_identifier . '-' . $token_count;
+            return $base_token . '-' . $client_identifier . '-' . $tokenCount;
         }
         
         return false;
@@ -77,9 +135,10 @@ class TokenApi {
      */
     public function create() {
         // Validar que el cliente existe
-        $clientModel = new ClientApi($this->conn);
-        $clientModel->id = $this->id_client_api;
-        if (!$clientModel->readOne()) {
+        $query = "SELECT id FROM client_api WHERE id = ? AND estado = 1 LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id_client_api);
+        if (!$stmt->execute() || $stmt->rowCount() === 0) {
             return false;
         }
 
@@ -151,30 +210,6 @@ class TokenApi {
         $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Leer un token específico por ID
-     */
-    public function readOne() {
-        $query = "SELECT t.*, c.razon_social, c.ruc
-                 FROM " . $this->table_name . " t 
-                 LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.id = ? LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        $stmt->execute();
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if($row) {
-            $this->id_client_api = $row['id_client_api'];
-            $this->token = $row['token'];
-            $this->fecha_registro = $row['fecha_registro'];
-            $this->estado = $row['estado'];
             return true;
         }
         return false;
