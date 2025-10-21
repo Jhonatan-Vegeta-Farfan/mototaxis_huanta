@@ -6,17 +6,16 @@ RewriteBase /mototaxis_huanta/
     RewriteEngine On
     RewriteBase /mototaxis_huanta/
 
-    # API PÚBLICA - Redirección correcta
-    RewriteRule ^api/public$ api.php [QSA,L]
-    RewriteRule ^api/public/listar$ api.php?action=listar [QSA,L]
-    RewriteRule ^api/public/buscar$ api.php?action=buscar [QSA,L]
-    RewriteRule ^api/public/buscar-dni$ api.php?action=buscarDni [QSA,L]
-    RewriteRule ^api/public/validar$ api.php?action=validar [QSA,L]
-    RewriteRule ^api/public/documentacion$ views/api_public/documentacion.php [L]
+    # RUTAS PÚBLICAS - Acceso sin autenticación
+    RewriteRule ^consulta-publica$ public_api.php [L]
+    RewriteRule ^api/publico$ public_api.php [L]
+    RewriteRule ^api/documentacion$ api.php [L]
 
-    # Vista pública del API
-    RewriteRule ^consulta-mototaxis$ views/api_public/index.php [L]
-    RewriteRule ^api/consulta$ views/api_public/index.php [L]
+    # ENDPOINTS API JSON
+    RewriteRule ^api/v1/validar$ api.php?action=validar [QSA,L]
+    RewriteRule ^api/v1/listar$ api.php?action=listar [QSA,L]
+    RewriteRule ^api/v1/buscar$ api.php?action=buscar [QSA,L]
+    RewriteRule ^api/v1/buscar-dni$ api.php?action=buscarDni [QSA,L]
 
     # Reglas existentes para el sistema administrativo
     RewriteRule ^admin/(.*)$ index.php?controller=$1 [QSA,L]
