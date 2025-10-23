@@ -1,5 +1,5 @@
     <!-- Footer -->
-    <footer class="bg-dark text-white py-5 mt-5">
+    <footer class="bg-dark text-white py-5 mt-5" id="contacto">
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4">
@@ -39,7 +39,7 @@
                 </div>
                 
                 <div class="col-lg-3 col-md-6">
-                    <h6 class="text-primary mb-3" id="contacto">Contacto</h6>
+                    <h6 class="text-primary mb-3">Contacto</h6>
                     <ul class="list-unstyled">
                         <li class="mb-2">
                             <i class="bi bi-geo-alt me-2 text-primary"></i>
@@ -86,6 +86,8 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/alert-system.js"></script>
+    <script src="../assets/js/effects.js"></script>
     
     <script>
         // Efecto hover para enlaces
