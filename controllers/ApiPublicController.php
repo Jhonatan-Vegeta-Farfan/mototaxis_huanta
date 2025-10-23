@@ -195,7 +195,7 @@ class ApiPublicController {
         
         // Obtener información del cliente
         $clientData = null;
-        if ($tokenData) {
+        if ($tokenData && is_array($tokenData)) {
             $clientQuery = "SELECT * FROM client_api WHERE id = ?";
             $clientStmt = $this->db->prepare($clientQuery);
             $clientStmt->bindParam(1, $tokenData['id_client_api']);
@@ -220,10 +220,10 @@ class ApiPublicController {
             'message' => '✅ Token válido',
             'data' => [
                 'token' => [
-                    'id' => $tokenData['id'],
-                    'token' => $tokenData['token'],
-                    'fecha_registro' => $tokenData['fecha_registro'],
-                    'estado' => (bool)$tokenData['estado']
+                    'id' => $tokenData['id'] ?? null,
+                    'token' => $tokenData['token'] ?? null,
+                    'fecha_registro' => $tokenData['fecha_registro'] ?? null,
+                    'estado' => (bool)($tokenData['estado'] ?? false)
                 ],
                 'cliente' => $clientData
             ]
@@ -263,7 +263,7 @@ class ApiPublicController {
         
         $tokenData = $this->tokenApiModel->getByToken($token);
         
-        if (!$tokenData) {
+        if (!$tokenData || !is_array($tokenData)) {
             http_response_code(401);
             echo json_encode([
                 'success' => false,

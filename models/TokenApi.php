@@ -43,22 +43,22 @@ class TokenApi {
     }
 
     /**
-     * Obtener token por valor - CORREGIDO
+     * Obtener token por valor - MEJORADO CON MANEJO DE ERRORES
      */
     public function getByToken($token) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE token = ? LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $token);
-        
         try {
+            $query = "SELECT * FROM " . $this->table_name . " WHERE token = ? LIMIT 0,1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $token);
             $stmt->execute();
+            
             if ($stmt->rowCount() > 0) {
                 return $stmt->fetch(PDO::FETCH_ASSOC);
             }
-            return false;
+            return null; // Retornar null en lugar de false para mejor consistencia
         } catch (PDOException $e) {
             error_log("Error en getByToken: " . $e->getMessage());
-            return false;
+            return null;
         }
     }
 
