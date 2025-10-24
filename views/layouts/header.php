@@ -1,12 +1,30 @@
+<?php
+// Verificar si es una página pública o administrativa
+$isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_public') || 
+                (basename($_SERVER['PHP_SELF']) === 'api.php');
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Mototaxis Huanta</title>
+    <title><?php echo $pageTitle ?? 'Sistema Mototaxis Huanta'; ?></title>
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos personalizados -->
     <link href="../assets/css/styles.css" rel="stylesheet">
+    
     <style>
         :root {
             --primary-color: #1e3c72;
@@ -242,6 +260,7 @@
     </style>
 </head>
 <body>
+    <?php if (!$isPublicPage): ?>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <div class="navbar-container">
@@ -287,56 +306,11 @@
                                 <i class="fas fa-chart-bar"></i> Requests
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?controller=api_public&action=index">
-                                <i class="fas fa-code"></i> API Público
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </div>
         </div>
     </nav>
+    <?php endif; ?>
 
     <div class="main-content">
-        <!-- El contenido específico de cada página irá aquí -->
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Resaltar elemento activo en el menú
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPage = window.location.href;
-            const navLinks = document.querySelectorAll('.nav-link');
-            
-            navLinks.forEach(link => {
-                if (link.href === currentPage) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // Manejar el colapso del menú en móviles al hacer clic en un enlace
-            const navLinksMobile = document.querySelectorAll('.navbar-nav .nav-link');
-            const navbarCollapse = document.querySelector('.navbar-collapse');
-            
-            navLinksMobile.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 992) {
-                        const bsCollapse = new bootstrap.Collapse(navbarCollapse);
-                        bsCollapse.hide();
-                    }
-                });
-            });
-        });
-        
-        // Ajustar el padding del body según la altura del navbar
-        function adjustBodyPadding() {
-            const navbarHeight = document.querySelector('.navbar').offsetHeight;
-            document.body.style.paddingTop = navbarHeight + 'px';
-        }
-        
-        // Ejecutar al cargar y al redimensionar
-        window.addEventListener('load', adjustBodyPadding);
-        window.addEventListener('resize', adjustBodyPadding);
-    </script>
-</body>
-</html>
