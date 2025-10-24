@@ -20,9 +20,9 @@ include __DIR__ . '/../layouts/header_public.php';
                             <label class="form-label">
                                 <i class="bi bi-key me-2"></i>Token de Acceso
                             </label>
-                            <input type="text" class="form-control" id="accessToken" 
+                            <input type="hidden" class="form-control" id="accessToken" 
                                    placeholder="Ingrese su token de acceso API" 
-                                   value="bd267203d8f3bd793b969731a03b0c135b8394e36b1fe1047415b7db5c216ed5">
+                                   value="8ed9873d99e3ab18c922eaf4af3ee20f-STI-1">
                             <div class="form-text text-light opacity-75">
                                 Token requerido para autenticar las consultas a la API.
                             </div>
@@ -84,8 +84,8 @@ include __DIR__ . '/../layouts/header_public.php';
                         <i class="bi bi-list-ul me-2"></i>Resultados
                     </h5>
                     <div>
-                        <button class="btn btn-outline-light btn-sm me-2" onclick="copiarJSON()">
-                            <i class="bi bi-clipboard me-1"></i>Copiar JSON
+                        <button class="btn btn-outline-light btn-sm me-2" onclick="mostrarOcultarJSON()" id="toggleJSON">
+                            <i class="bi bi-code-slash me-1"></i>Ver JSON
                         </button>
                         <button class="btn btn-outline-light btn-sm" onclick="limpiarResultados()">
                             <i class="bi bi-x-circle me-1"></i>Limpiar
@@ -108,7 +108,7 @@ include __DIR__ . '/../layouts/header_public.php';
                         <span id="errorText"></span>
                     </div>
 
-                    <!-- Resultados en JSON -->
+                    <!-- Resultados en JSON (oculto por defecto) -->
                     <div id="jsonResults" style="display: none;">
                         <h6 class="text-primary mb-3">Respuesta JSON:</h6>
                         <pre class="bg-dark text-light border rounded p-3" 
@@ -124,6 +124,12 @@ include __DIR__ . '/../layouts/header_public.php';
                         <i class="bi bi-inbox display-1 text-muted"></i>
                         <h5 class="text-muted mt-3">No hay resultados</h5>
                         <p class="text-muted">Realice una búsqueda para ver los mototaxis</p>
+                    </div>
+
+                    <!-- Información de resultados -->
+                    <div id="resultsInfo" class="alert alert-info mt-3" style="display: none;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span id="infoText"></span>
                     </div>
 
                     <!-- Paginación Resultados -->
@@ -149,6 +155,7 @@ include __DIR__ . '/../layouts/header_public.php';
 let currentPage = 1;
 let totalPages = 1;
 let currentSearchType = '';
+let currentData = null;
 
 // Cambiar tipo de búsqueda
 document.getElementById('searchType').addEventListener('change', function() {
@@ -248,7 +255,8 @@ function realizarBusqueda() {
         console.log('Data recibida:', data); // Para debug
         mostrarCarga(false);
         if (data.success) {
-            mostrarResultadosJSON(data);
+            currentData = data; // Guardar datos para mostrar JSON después
+            mostrarResultados(data);
             if (searchType === 'todos' && data.paginacion) {
                 mostrarPaginacion(data.paginacion);
             }
@@ -296,7 +304,8 @@ function validarToken() {
     .then(data => {
         mostrarCarga(false);
         if (data.success) {
-            mostrarResultadosJSON(data);
+            currentData = data; // Guardar datos para mostrar JSON después
+            mostrarResultados(data);
             // Mostrar información del cliente en una alerta
             if (data.data && data.data.cliente) {
                 const cliente = data.data.cliente;
@@ -360,15 +369,66 @@ function mostrarPaginacion(paginacion) {
     }
 }
 
-// Mostrar resultados en JSON
-function mostrarResultadosJSON(data) {
-    document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
-    document.getElementById('jsonResults').style.display = 'block';
-    document.getElementById('noResults').style.display = 'none';
+// Mostrar resultados principales
+function mostrarResultados(data) {
+    // Mostrar información de resultados
+    mostrarInformacionResultados(data);
     
-    // También mostrar en tarjetas si hay datos
+    // Mostrar tarjetas si hay datos
     if (data.data && (Array.isArray(data.data) ? data.data.length > 0 : true)) {
         mostrarTarjetas(data.data);
+    }
+    
+    // Ocultar JSON por defecto
+    document.getElementById('jsonResults').style.display = 'none';
+    document.getElementById('toggleJSON').innerHTML = '<i class="bi bi-code-slash me-1"></i>Ver JSON';
+    
+    document.getElementById('noResults').style.display = 'none';
+}
+
+// Mostrar información de resultados
+function mostrarInformacionResultados(data) {
+    const infoDiv = document.getElementById('resultsInfo');
+    const infoText = document.getElementById('infoText');
+    
+    if (data.data) {
+        const datos = Array.isArray(data.data) ? data.data : [data.data];
+        const count = datos.length;
+        
+        if (count > 0) {
+            if (currentSearchType === 'todos' && data.paginacion) {
+                const paginacion = data.paginacion;
+                infoText.textContent = 
+                    `Mostrando ${count} de ${paginacion.total_registros} mototaxis registrados`;
+            } else {
+                infoText.textContent = 
+                    `Se encontró${count > 1 ? 'n' : ''} ${count} mototaxi${count > 1 ? 's' : ''}`;
+            }
+            infoDiv.style.display = 'block';
+        } else {
+            infoDiv.style.display = 'none';
+        }
+    } else {
+        infoDiv.style.display = 'none';
+    }
+}
+
+// Mostrar/ocultar JSON
+function mostrarOcultarJSON() {
+    const jsonDiv = document.getElementById('jsonResults');
+    const toggleBtn = document.getElementById('toggleJSON');
+    
+    if (jsonDiv.style.display === 'none') {
+        // Mostrar JSON
+        if (currentData) {
+            document.getElementById('jsonOutput').textContent = JSON.stringify(currentData, null, 2);
+        }
+        jsonDiv.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="bi bi-eye-slash me-1"></i>Ocultar JSON';
+    } else {
+        // Ocultar JSON
+        jsonDiv.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="bi bi-code-slash me-1"></i>Ver JSON';
     }
 }
 
@@ -388,7 +448,7 @@ function mostrarTarjetas(mototaxis) {
         const card = document.createElement('div');
         card.className = 'col-md-6 col-lg-4';
         card.innerHTML = `
-            <div class="card h-100">
+            <div class="card h-100 shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h6 class="mb-0">
                         <i class="bi bi-motorcycle me-2"></i>${mototaxi.numero_asignado}
@@ -422,6 +482,8 @@ function ocultarResultados() {
     document.getElementById('cardResults').style.display = 'none';
     document.getElementById('noResults').style.display = 'none';
     document.getElementById('resultsPagination').style.display = 'none';
+    document.getElementById('resultsInfo').style.display = 'none';
+    document.getElementById('toggleJSON').innerHTML = '<i class="bi bi-code-slash me-1"></i>Ver JSON';
 }
 
 function mostrarError(mensaje) {
@@ -437,11 +499,12 @@ function ocultarError() {
 }
 
 function copiarJSON() {
-    const jsonText = document.getElementById('jsonOutput').textContent;
-    if (!jsonText) {
+    if (!currentData) {
         alert('No hay resultados para copiar');
         return;
     }
+    
+    const jsonText = JSON.stringify(currentData, null, 2);
     
     navigator.clipboard.writeText(jsonText)
         .then(() => {
@@ -465,8 +528,9 @@ function copiarJSON() {
 }
 
 function limpiarResultados() {
-    document.getElementById('jsonOutput').textContent = '';
     document.getElementById('cardResults').innerHTML = '';
+    document.getElementById('jsonOutput').textContent = '';
+    currentData = null;
     ocultarResultados();
     document.getElementById('noResults').style.display = 'block';
     ocultarError();
