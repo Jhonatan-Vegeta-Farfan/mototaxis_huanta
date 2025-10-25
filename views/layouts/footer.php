@@ -1,32 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Mototaxis Huanta</title>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: #f8f9fa;
-        }
-        
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        
         footer {
             background-color: #1a365d; /* Azul oscuro */
             color: white;
