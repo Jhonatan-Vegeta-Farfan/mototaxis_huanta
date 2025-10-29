@@ -12,6 +12,8 @@
         padding: 12px 0;
         width: 100%;
         border-top: 3px solid #2d3748;
+        position: relative;
+        margin-top: auto;
     }
     
     .footer-content {
