@@ -92,5 +92,21 @@ class TokenApiController {
             echo "<script>alert('Error al eliminar el token'); window.location.href='index.php?controller=tokens_api&action=index';</script>";
         }
     }
+
+    /**
+     * NUEVO: Mostrar detalles de un token específico
+     */
+    public function view() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            $clientes = $this->model->getClientes();
+            $db_connection = $this->db;
+            include_once 'views/tokens_api/view.php';
+        } else {
+            header("Location: index.php?controller=tokens_api&action=index");
+            exit();
+        }
+    }
 }
 ?>

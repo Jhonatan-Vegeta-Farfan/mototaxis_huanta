@@ -19,7 +19,7 @@ class ApiPublicController {
         $this->countRequestModel = new CountRequest($db);
     }
 
-    // VISTA PÚBLICA DE BÚSQUEDA
+    // VISTA PÚBLICA DE DOCUMENTACIÓN
     public function index() {
         include __DIR__ . '/../views/api_public/index.php';
     }
@@ -47,7 +47,7 @@ class ApiPublicController {
             
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if ($contador >= $offset && $contador < ($offset + $porPagina)) {
-                    $mototaxisPaginados[] = $row;
+                    $mototaxisPaginados[] = $this->formatearDatosMototaxi($row);
                 }
                 $contador++;
                 if ($contador >= ($offset + $porPagina)) break;
@@ -95,7 +95,8 @@ class ApiPublicController {
             }
             
             // Buscar por número asignado usando el modelo
-            $query = "SELECT m.*, e.razon_social as empresa 
+            $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
+                             e.representante_legal as representante_empresa
                      FROM mototaxis m 
                      LEFT JOIN empresas e ON m.id_empresa = e.id 
                      WHERE m.numero_asignado = ?";
@@ -110,15 +111,23 @@ class ApiPublicController {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Mototaxi no encontrado'
+                    'message' => 'Mototaxi no encontrado con el número: ' . $numero
                 ]);
                 return;
             }
             
+            // Formatear datos para respuesta completa
+            $mototaxiFormateado = $this->formatearDatosMototaxi($mototaxi);
+            
             echo json_encode([
                 'success' => true,
                 'message' => 'Mototaxi encontrado exitosamente',
-                'data' => $mototaxi
+                'data' => $mototaxiFormateado,
+                'metadata' => [
+                    'fecha_consulta' => date('Y-m-d H:i:s'),
+                    'numero_buscado' => $numero,
+                    'total_resultados' => 1
+                ]
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
@@ -151,7 +160,7 @@ class ApiPublicController {
             }
             
             // Buscar por DNI usando el modelo
-            $query = "SELECT m.*, e.razon_social as empresa 
+            $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa
                      FROM mototaxis m 
                      LEFT JOIN empresas e ON m.id_empresa = e.id 
                      WHERE m.dni LIKE ?";
@@ -163,11 +172,18 @@ class ApiPublicController {
             
             $mototaxis = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Formatear datos
+            $mototaxisFormateados = array_map([$this, 'formatearDatosMototaxi'], $mototaxis);
+            
             echo json_encode([
                 'success' => true,
                 'message' => 'Búsqueda por DNI completada',
-                'data' => $mototaxis,
-                'total' => count($mototaxis)
+                'data' => $mototaxisFormateados,
+                'total' => count($mototaxis),
+                'metadata' => [
+                    'fecha_consulta' => date('Y-m-d H:i:s'),
+                    'dni_buscado' => $dni
+                ]
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
@@ -190,6 +206,11 @@ class ApiPublicController {
         $headers = getallheaders();
         $token = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         $token = str_replace('Bearer ', '', $token);
+        
+        // Si no hay token en el header, intentar obtenerlo de los parámetros GET
+        if (empty($token)) {
+            $token = $_GET['token'] ?? '';
+        }
         
         $tokenData = $this->tokenApiModel->getByToken($token);
         
@@ -230,7 +251,7 @@ class ApiPublicController {
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    // MÉTODOS PRIVADOS - CORREGIDOS
+    // MÉTODOS PRIVADOS
     private function configurarHeadersJSON() {
         header('Content-Type: application/json');
         header("Access-Control-Allow-Origin: *");
@@ -289,7 +310,7 @@ class ApiPublicController {
 
     private function registrarRequest($tokenId, $tipo) {
         try {
-            $query = "INSERT INTO count_request (id_token_api, tipo, fecha) VALUES (?, ?, CURDATE())";
+            $query = "INSERT INTO count_request (id_token_api, tipo, fecha) VALUES (?, ?, NOW())";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(1, $tokenId);
             $stmt->bindParam(2, $tipo);
@@ -298,6 +319,33 @@ class ApiPublicController {
             // Silenciar errores de registro para no afectar la respuesta principal
             error_log("Error registrando request: " . $e->getMessage());
         }
+    }
+
+    // Formatear datos del mototaxi para respuesta completa
+    private function formatearDatosMototaxi($mototaxi) {
+        return [
+            'id' => $mototaxi['id'] ?? null,
+            'numero_asignado' => $mototaxi['numero_asignado'] ?? '',
+            'nombre_completo' => $mototaxi['nombre_completo'] ?? '',
+            'dni' => $mototaxi['dni'] ?? '',
+            'direccion' => $mototaxi['direccion'] ?? '',
+            'placa_rodaje' => $mototaxi['placa_rodaje'] ?? '',
+            'anio_fabricacion' => $mototaxi['anio_fabricacion'] ?? '',
+            'marca' => $mototaxi['marca'] ?? '',
+            'numero_motor' => $mototaxi['numero_motor'] ?? '',
+            'tipo_motor' => $mototaxi['tipo_motor'] ?? '',
+            'serie' => $mototaxi['serie'] ?? '',
+            'color' => $mototaxi['color'] ?? '',
+            'fecha_registro' => $mototaxi['fecha_registro'] ?? '',
+            'id_empresa' => $mototaxi['id_empresa'] ?? null,
+            'empresa' => [
+                'razon_social' => $mototaxi['empresa'] ?? '',
+                'ruc' => $mototaxi['ruc_empresa'] ?? '',
+                'representante_legal' => $mototaxi['representante_empresa'] ?? ''
+            ],
+            'estado_registro' => 'ACTIVO',
+            'fecha_actualizacion' => date('Y-m-d H:i:s')
+        ];
     }
 }
 ?>

@@ -72,6 +72,18 @@ class EmpresaController {
         }
     }
 
+    // NUEVO MÉTODO PARA VER DETALLES
+    public function view() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            include_once 'views/empresas/view.php';
+        } else {
+            header("Location: index.php?controller=empresas&action=index");
+            exit();
+        }
+    }
+
     // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
     public function search() {
         $search_keywords = isset($_GET['q']) ? $_GET['q'] : '';

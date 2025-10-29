@@ -73,5 +73,19 @@ class CountRequestController {
             exit();
         }
     }
+
+    // NUEVO: Mostrar detalles de un request específico
+    public function view() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            $tokens = $this->model->getTokens();
+            $db_connection = $this->db;
+            include_once 'views/count_request/view.php';
+        } else {
+            header("Location: index.php?controller=count_request&action=index");
+            exit();
+        }
+    }
 }
 ?>

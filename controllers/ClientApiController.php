@@ -112,5 +112,20 @@ class ClientApiController {
             echo "<script>alert('Error al eliminar el cliente API'); window.location.href='index.php?controller=client_api&action=index';</script>";
         }
     }
+
+    /**
+     * NUEVO: Mostrar detalles de un cliente API específico
+     */
+    public function view() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            $db_connection = $this->db;
+            include_once 'views/client_api/view.php';
+        } else {
+            header("Location: index.php?controller=client_api&action=index");
+            exit();
+        }
+    }
 }
 ?>

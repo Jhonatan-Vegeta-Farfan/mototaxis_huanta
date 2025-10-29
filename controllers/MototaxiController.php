@@ -100,6 +100,19 @@ class MototaxiController {
         }
     }
 
+    // NUEVO MÉTODO PARA VER DETALLES
+    public function view() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            $empresas = $this->model->getEmpresas();
+            include_once 'views/mototaxis/view.php';
+        } else {
+            header("Location: index.php?controller=mototaxis&action=index");
+            exit();
+        }
+    }
+
     // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
     public function search() {
         $search_keywords = isset($_GET['q']) ? $_GET['q'] : '';
