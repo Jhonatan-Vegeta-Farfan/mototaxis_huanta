@@ -60,8 +60,7 @@ if (empty($controller)) {
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
                         <div class="municipal-logo-compacto me-3">
-                            <img src="https://www.elgallomasgallo.com.gt/media/catalog/product/m/o/mototaxi-bajaj-torito-2025-rojo-191869.jpg?width=800&height=&canvas=800,&optimize=medium&bg-color=255,255,255&fit=bounds" 
-                                 alt="Mototaxi" class="mototaxi-header-image">
+                            <i class="fas fa-landmark fa-lg"></i>
                         </div>
                         <div>
                             <h4 class="mb-0 fw-bold">MUNICIPALIDAD PROVINCIAL DE HUANTA</h4>
@@ -347,22 +346,14 @@ if (empty($controller)) {
 }
 
 .municipal-logo-compacto {
-    width: 60px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     background: rgba(255,255,255,0.1);
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 2px solid rgba(255,255,255,0.2);
-    overflow: hidden;
-}
-
-.mototaxi-header-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 4px;
 }
 
 /* Stats Cards */
@@ -604,11 +595,6 @@ if (empty($controller)) {
     
     .card-number-corp {
         font-size: 1.6rem;
-    }
-    
-    .municipal-logo-compacto {
-        width: 50px;
-        height: 40px;
     }
 }
 </style>
