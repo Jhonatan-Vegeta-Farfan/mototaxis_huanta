@@ -46,7 +46,7 @@ if (empty($controller)) {
     $totalRequests = $countRequestModel->read()->rowCount();
 
     // Incluir header del sistema
-    $pageTitle = 'Dashboard - Sistema Mototaxis Huanta';
+    $pageTitle = 'Sistema Mototaxis Huanta';
     include_once 'views/layouts/header.php';
 ?>
 
