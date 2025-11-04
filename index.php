@@ -47,12 +47,7 @@ if (empty($controller)) {
 
     // Incluir header del sistema
     $pageTitle = 'Sistema Mototaxis Huanta';
-    $mototaxiImage = 'https://www.elgallomasgallo.com.gt/media/catalog/product/m/o/mototaxi-bajaj-torito-2025-rojo-191869.jpg?width=800&height=&canvas=800,&optimize=medium&bg-color=255,255,255&fit=bounds';
-    
     include_once 'views/layouts/header.php';
-    
-    // Luego en tu HTML/PHP donde quieras mostrar la imagen
-    echo "<img src='$mototaxiImage' alt='Mototaxi'>";
 ?>
 
 <!-- Dashboard Content -->
