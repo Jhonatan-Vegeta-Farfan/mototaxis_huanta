@@ -13,17 +13,43 @@ if ($_POST) {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    // Credenciales hardcodeadas
-    $valid_username = 'jhonatan';
-    $valid_password = '123456789';
+    // Conexión a la base de datos
+    require_once 'config/database.php';
+    $database = new Database();
+    $db = $database->getConnection();
     
-    if ($username === $valid_username && $password === $valid_password) {
-        $_SESSION['loggedin'] = true;
-        $_SESSION['username'] = $username;
-        header("Location: index.php");
-        exit;
+    if ($db) {
+        // Consultar usuario en la base de datos (sin la columna estado)
+        $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
+        $stmt = $db->prepare($query);
+        
+        if ($stmt) {
+            $stmt->bindParam(1, $username);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() == 1) {
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Verificar contraseña (en texto plano según la base de datos)
+                if ($password === $user['password']) {
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['username'] = $user['usuario'];
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nombre'] = $user['nombre'];
+                    
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $error = 'Usuario o contraseña incorrectos';
+                }
+            } else {
+                $error = 'Usuario no encontrado';
+            }
+        } else {
+            $error = 'Error en la consulta de base de datos';
+        }
     } else {
-        $error = 'Usuario o contraseña incorrectos';
+        $error = 'Error de conexión a la base de datos';
     }
 }
 ?>
@@ -192,8 +218,12 @@ if ($_POST) {
         }
         
         @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+            0%, 100% { 
+                transform: translateY(0) rotate(0deg); 
+            }
+            50% { 
+                transform: translateY(-20px) rotate(180deg); 
+            }
         }
         
         .credential-info {
@@ -201,6 +231,23 @@ if ($_POST) {
             border-radius: 10px;
             padding: 10px;
             border-left: 3px solid var(--primary-turquoise);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .credential-info h6 {
+            color: var(--primary-turquoise);
+            margin-bottom: 10px;
+        }
+
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
         }
     </style>
 </head>
@@ -225,8 +272,8 @@ if ($_POST) {
                         <?php if ($error): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <?php echo $error; ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <?php echo htmlspecialchars($error); ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <?php endif; ?>
                         
@@ -237,7 +284,7 @@ if ($_POST) {
                                 </label>
                                 <input type="text" class="form-control" id="username" name="username" 
                                        placeholder="Ingrese su usuario" required 
-                                       value="<?php echo $_POST['username'] ?? ''; ?>">
+                                       value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
                             </div>
                             
                             <div class="mb-4 position-relative">

@@ -6,6 +6,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit;
 }
+// ... resto del código
 
 // Incluir modelos
 require_once 'models/Database.php';
