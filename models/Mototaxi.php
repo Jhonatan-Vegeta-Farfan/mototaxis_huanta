@@ -22,6 +22,7 @@ class Mototaxi {
         $this->conn = $db;
     }
 
+
     public function read() {
         $query = "SELECT m.*, e.razon_social as empresa 
                  FROM " . $this->table_name . " m 
@@ -37,7 +38,7 @@ class Mototaxi {
         $query = "SELECT m.*, e.razon_social as empresa 
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
-                 WHERE m.numero_asignado LIKE ? OR m.nombre_completo LIKE ? OR m.dni LIKE ?
+                 WHERE m.numero_asignado LIKE ? OR m.nombre_completo LIKE ? OR m.dni LIKE ? OR m.placa_rodaje LIKE ?
                  ORDER BY m.id DESC";
         
         $stmt = $this->conn->prepare($query);
@@ -47,6 +48,7 @@ class Mototaxi {
         $stmt->bindParam(1, $keywords);
         $stmt->bindParam(2, $keywords);
         $stmt->bindParam(3, $keywords);
+        $stmt->bindParam(4, $keywords);
         
         $stmt->execute();
         return $stmt;
@@ -124,7 +126,7 @@ class Mototaxi {
         $this->dni = htmlspecialchars(strip_tags($this->dni));
         $this->direccion = htmlspecialchars(strip_tags($this->direccion));
         $this->placa_rodaje = htmlspecialchars(strip_tags($this->placa_rodaje));
-        $this->anio_fabricacion = htmlspecialchars(strip_tags($this->anio_fabricacion));
+        $this->anio_fabricacion = $this->anio_fabricacion ? htmlspecialchars(strip_tags($this->anio_fabricacion)) : null;
         $this->marca = htmlspecialchars(strip_tags($this->marca));
         $this->numero_motor = htmlspecialchars(strip_tags($this->numero_motor));
         $this->tipo_motor = htmlspecialchars(strip_tags($this->tipo_motor));
@@ -148,6 +150,7 @@ class Mototaxi {
         $stmt->bindParam(":id_empresa", $this->id_empresa);
         
         if($stmt->execute()) {
+            $this->id = $this->conn->lastInsertId();
             return true;
         }
         return false;
@@ -170,7 +173,7 @@ class Mototaxi {
         $this->dni = htmlspecialchars(strip_tags($this->dni));
         $this->direccion = htmlspecialchars(strip_tags($this->direccion));
         $this->placa_rodaje = htmlspecialchars(strip_tags($this->placa_rodaje));
-        $this->anio_fabricacion = htmlspecialchars(strip_tags($this->anio_fabricacion));
+        $this->anio_fabricacion = $this->anio_fabricacion ? htmlspecialchars(strip_tags($this->anio_fabricacion)) : null;
         $this->marca = htmlspecialchars(strip_tags($this->marca));
         $this->numero_motor = htmlspecialchars(strip_tags($this->numero_motor));
         $this->tipo_motor = htmlspecialchars(strip_tags($this->tipo_motor));
@@ -240,10 +243,102 @@ class Mototaxi {
     }
 
     public function getEmpresas() {
-        $query = "SELECT id, razon_social FROM empresas";
+        $query = "SELECT id, razon_social FROM empresas ORDER BY razon_social";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
+    }
+
+    /**
+     * Verificar si el número asignado ya existe
+     */
+    public function numeroAsignadoExists($numero_asignado, $exclude_id = null) {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE numero_asignado = ?";
+        $params = [$numero_asignado];
+        
+        if ($exclude_id) {
+            $query .= " AND id != ?";
+            $params[] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Verificar si el DNI ya existe
+     */
+    public function dniExists($dni, $exclude_id = null) {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE dni = ?";
+        $params = [$dni];
+        
+        if ($exclude_id) {
+            $query .= " AND id != ?";
+            $params[] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Obtener mototaxis recientemente registrados
+     */
+    public function getRecent($limit = 5) {
+        try {
+            $query = "SELECT m.*, e.razon_social as empresa 
+                     FROM " . $this->table_name . " m 
+                     LEFT JOIN empresas e ON m.id_empresa = e.id 
+                     ORDER BY m.fecha_registro DESC 
+                     LIMIT ?";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log("Error en getRecent: " . $e->getMessage());
+            return null;
+        }
+    }
+
+
+    /**
+     * Buscar mototaxi por número exacto para API
+     */
+    public function findByNumeroAsignado($numero_asignado) {
+        $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
+                         e.representante_legal as representante_empresa
+                 FROM " . $this->table_name . " m 
+                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                 WHERE m.numero_asignado = ?
+                 LIMIT 0,1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $numero_asignado);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Buscar mototaxis por DNI exacto para API
+     */
+    public function findByDni($dni) {
+        $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa
+                 FROM " . $this->table_name . " m 
+                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                 WHERE m.dni = ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $dni);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

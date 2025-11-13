@@ -10,13 +10,17 @@ class CountRequestController {
 
     // Mostrar lista de requests con filtros por cliente y token
     public function index() {
-        $client_id = isset($_GET['client_id']) ? $_GET['client_id'] : '';
-        $token_id = isset($_GET['token_id']) ? $_GET['token_id'] : '';
+        $client_id = isset($_GET['client_id']) ? intval($_GET['client_id']) : '';
+        $token_id = isset($_GET['token_id']) ? intval($_GET['token_id']) : '';
+        $fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : '';
+        $fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : '';
         
         if (!empty($client_id)) {
             $stmt = $this->model->getByClient($client_id);
         } else if (!empty($token_id)) {
             $stmt = $this->model->getByToken($token_id);
+        } else if (!empty($fecha_inicio) || !empty($fecha_fin)) {
+            $stmt = $this->model->getByDateRange($fecha_inicio, $fecha_fin);
         } else {
             $stmt = $this->model->read();
         }
@@ -29,15 +33,28 @@ class CountRequestController {
     public function create() {
         $tokens = $this->model->getTokens();
         $db_connection = $this->db;
+        $error = '';
         
         if($_POST) {
-            $this->model->id_token_api = $_POST['id_token_api'];
-            $this->model->tipo = $_POST['tipo'];
+            $this->model->id_token_api = intval($_POST['id_token_api']);
+            $this->model->tipo = trim($_POST['tipo']);
             $this->model->fecha = $_POST['fecha'];
 
-            if($this->model->create()) {
-                header("Location: index.php?controller=count_request&action=index");
-                exit();
+            // Validaciones
+            if (empty($this->model->id_token_api)) {
+                $error = 'El token es obligatorio';
+            } elseif (empty($this->model->tipo)) {
+                $error = 'El tipo de request es obligatorio';
+            } elseif (empty($this->model->fecha)) {
+                $error = 'La fecha es obligatoria';
+            } else {
+                if($this->model->create()) {
+                    $_SESSION['success_message'] = 'Request registrado exitosamente';
+                    header("Location: index.php?controller=count_request&action=index");
+                    exit();
+                } else {
+                    $error = 'Error al crear el request';
+                }
             }
         }
         include_once 'views/count_request/create.php';
@@ -45,47 +62,93 @@ class CountRequestController {
 
     // Editar request existente
     public function edit() {
-        $this->model->id = $_GET['id'];
+        $this->model->id = intval($_GET['id']);
         $tokens = $this->model->getTokens();
         $db_connection = $this->db;
+        $error = '';
         
         if($_POST) {
-            $this->model->id = $_POST['id'];
-            $this->model->id_token_api = $_POST['id_token_api'];
-            $this->model->tipo = $_POST['tipo'];
+            $this->model->id = intval($_POST['id']);
+            $this->model->id_token_api = intval($_POST['id_token_api']);
+            $this->model->tipo = trim($_POST['tipo']);
             $this->model->fecha = $_POST['fecha'];
 
-            if($this->model->update()) {
+            // Validaciones
+            if (empty($this->model->id_token_api)) {
+                $error = 'El token es obligatorio';
+            } elseif (empty($this->model->tipo)) {
+                $error = 'El tipo de request es obligatorio';
+            } elseif (empty($this->model->fecha)) {
+                $error = 'La fecha es obligatoria';
+            } else {
+                if($this->model->update()) {
+                    $_SESSION['success_message'] = 'Request actualizado exitosamente';
+                    header("Location: index.php?controller=count_request&action=index");
+                    exit();
+                } else {
+                    $error = 'Error al actualizar el request';
+                }
+            }
+        } else {
+            if (!$this->model->readOne()) {
+                $_SESSION['error_message'] = 'Request no encontrado';
                 header("Location: index.php?controller=count_request&action=index");
                 exit();
             }
-        } else {
-            $this->model->readOne();
         }
         include_once 'views/count_request/edit.php';
     }
 
     // Eliminar request permanentemente
     public function delete() {
-        $this->model->id = $_GET['id'];
+        $this->model->id = intval($_GET['id']);
         if($this->model->delete()) {
-            header("Location: index.php?controller=count_request&action=index");
-            exit();
+            $_SESSION['success_message'] = 'Request eliminado exitosamente';
+        } else {
+            $_SESSION['error_message'] = 'Error al eliminar el request';
         }
+        header("Location: index.php?controller=count_request&action=index");
+        exit();
     }
 
     // NUEVO: Mostrar detalles de un request específico
     public function view() {
-        $this->model->id = $_GET['id'];
+        $this->model->id = intval($_GET['id']);
         
         if($this->model->readOne()) {
             $tokens = $this->model->getTokens();
             $db_connection = $this->db;
             include_once 'views/count_request/view.php';
         } else {
+            $_SESSION['error_message'] = 'Request no encontrado';
             header("Location: index.php?controller=count_request&action=index");
             exit();
         }
+    }
+
+    // NUEVO: Estadísticas de requests
+    public function estadisticas() {
+        $fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-01');
+        $fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-d');
+        
+        $stats = $this->model->getStats($fecha_inicio, $fecha_fin);
+        $db_connection = $this->db;
+        
+        include_once 'views/count_request/estadisticas.php';
+    }
+
+    // NUEVO: Limpiar requests antiguos
+    public function limpiar() {
+        $dias = isset($_GET['dias']) ? intval($_GET['dias']) : 30;
+        
+        if ($this->model->cleanOldRequests($dias)) {
+            $_SESSION['success_message'] = "Requests antiguos (más de {$dias} días) eliminados exitosamente";
+        } else {
+            $_SESSION['error_message'] = 'Error al limpiar requests antiguos';
+        }
+        
+        header("Location: index.php?controller=count_request&action=index");
+        exit();
     }
 }
 ?>

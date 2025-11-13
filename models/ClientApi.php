@@ -136,6 +136,7 @@ class ClientApi {
         $stmt->bindParam(":estado", $this->estado);
         
         if($stmt->execute()) {
+            $this->id = $this->conn->lastInsertId();
             return true;
         }
         return false;
@@ -189,6 +190,20 @@ class ClientApi {
     }
 
     /**
+     * Activar cliente API
+     */
+    public function activate() {
+        $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        
+        if($stmt->execute()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Contar tokens activos del cliente para generar identificador único
      */
     public function countTokens($client_id) {
@@ -217,6 +232,83 @@ class ClientApi {
         $stmt->execute($params);
         
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Obtener estadísticas del cliente
+     */
+    public function getStats($client_id) {
+        $stats = [
+            'total_tokens' => 0,
+            'tokens_activos' => 0,
+            'total_requests' => 0,
+            'requests_hoy' => 0,
+            'requests_este_mes' => 0
+        ];
+        
+        // Total tokens
+        $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        $stats['total_tokens'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Tokens activos
+        $query = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        $stats['tokens_activos'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Total requests
+        $query = "SELECT COUNT(*) as total FROM count_request cr 
+                 JOIN tokens_api t ON cr.id_token_api = t.id 
+                 WHERE t.id_client_api = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        $stats['total_requests'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Requests hoy
+        $query = "SELECT COUNT(*) as total FROM count_request cr 
+                 JOIN tokens_api t ON cr.id_token_api = t.id 
+                 WHERE t.id_client_api = ? AND DATE(cr.fecha) = CURDATE()";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        $stats['requests_hoy'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Requests este mes
+        $query = "SELECT COUNT(*) as total FROM count_request cr 
+                 JOIN tokens_api t ON cr.id_token_api = t.id 
+                 WHERE t.id_client_api = ? AND YEAR(cr.fecha) = YEAR(CURDATE()) 
+                 AND MONTH(cr.fecha) = MONTH(CURDATE())";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $client_id);
+        $stmt->execute();
+        $stats['requests_este_mes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        return $stats;
+    }
+
+    /**
+     * Obtener clientes con más requests
+     */
+    public function getTopClients($limit = 10) {
+        $query = "SELECT c.id, c.razon_social, c.ruc, COUNT(cr.id) as total_requests
+                 FROM client_api c
+                 LEFT JOIN tokens_api t ON c.id = t.id_client_api
+                 LEFT JOIN count_request cr ON t.id = cr.id_token_api
+                 WHERE c.estado = 1
+                 GROUP BY c.id, c.razon_social, c.ruc
+                 ORDER BY total_requests DESC
+                 LIMIT ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt;
     }
 }
 ?>

@@ -71,7 +71,7 @@ class Empresa {
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                  SET razon_social=:razon_social, ruc=:ruc, 
-                     representante_legal=:representante_legal";
+                     representante_legal=:representante_legal, fecha_registro=NOW()";
         
         $stmt = $this->conn->prepare($query);
         
@@ -84,6 +84,7 @@ class Empresa {
         $stmt->bindParam(":representante_legal", $this->representante_legal);
         
         if($stmt->execute()) {
+            $this->id = $this->conn->lastInsertId();
             return true;
         }
         return false;
@@ -140,6 +141,91 @@ class Empresa {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Obtener estadísticas de la empresa
+     */
+    public function getStats($empresa_id) {
+        $stats = [
+            'total_mototaxis' => 0,
+            'mototaxis_por_año' => [],
+            'mototaxis_por_marca' => [],
+            'ultimos_registros' => []
+        ];
+        
+        // Total mototaxis
+        $query = "SELECT COUNT(*) as total FROM mototaxis WHERE id_empresa = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        $stats['total_mototaxis'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Mototaxis por año
+        $query = "SELECT anio_fabricacion, COUNT(*) as total 
+                 FROM mototaxis 
+                 WHERE id_empresa = ? AND anio_fabricacion IS NOT NULL 
+                 GROUP BY anio_fabricacion 
+                 ORDER BY anio_fabricacion DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        $stats['mototaxis_por_año'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Mototaxis por marca
+        $query = "SELECT marca, COUNT(*) as total 
+                 FROM mototaxis 
+                 WHERE id_empresa = ? AND marca IS NOT NULL AND marca != '' 
+                 GROUP BY marca 
+                 ORDER BY total DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        $stats['mototaxis_por_marca'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Últimos registros
+        $query = "SELECT numero_asignado, nombre_completo, fecha_registro 
+                 FROM mototaxis 
+                 WHERE id_empresa = ? 
+                 ORDER BY fecha_registro DESC 
+                 LIMIT 5";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        $stats['ultimos_registros'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $stats;
+    }
+
+    /**
+     * Verificar si la empresa tiene mototaxis asociados
+     */
+    public function hasMototaxis($empresa_id) {
+        $query = "SELECT COUNT(*) as total FROM mototaxis WHERE id_empresa = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $empresa_id);
+        $stmt->execute();
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] > 0;
+    }
+
+    /**
+     * Obtener empresas con más mototaxis
+     */
+    public function getTopEmpresas($limit = 10) {
+        $query = "SELECT e.id, e.razon_social, e.ruc, COUNT(m.id) as total_mototaxis
+                 FROM empresas e
+                 LEFT JOIN mototaxis m ON e.id = m.id_empresa
+                 GROUP BY e.id, e.razon_social, e.ruc
+                 ORDER BY total_mototaxis DESC
+                 LIMIT ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt;
     }
 }
 ?>

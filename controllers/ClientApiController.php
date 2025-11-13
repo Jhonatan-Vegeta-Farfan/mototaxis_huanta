@@ -12,13 +12,13 @@ class ClientApiController {
      * Mostrar lista de clientes API con opciones de búsqueda
      */
     public function index() {
-        $search_keywords = isset($_GET['search']) ? $_GET['search'] : '';
+        $search_keywords = isset($_GET['search']) ? trim($_GET['search']) : '';
         $advanced_search = isset($_GET['advanced_search']) ? true : false;
         
         if (!empty($search_keywords)) {
             if ($advanced_search) {
-                $ruc = isset($_GET['ruc']) ? $_GET['ruc'] : '';
-                $razon_social = isset($_GET['razon_social']) ? $_GET['razon_social'] : '';
+                $ruc = isset($_GET['ruc']) ? trim($_GET['ruc']) : '';
+                $razon_social = isset($_GET['razon_social']) ? trim($_GET['razon_social']) : '';
                 $estado = isset($_GET['estado']) ? $_GET['estado'] : '';
                 
                 $stmt = $this->model->advancedSearch($ruc, $razon_social, $estado);
@@ -38,24 +38,36 @@ class ClientApiController {
      */
     public function create() {
         $error = '';
+        $success = '';
         
         if($_POST) {
-            $this->model->ruc = $_POST['ruc'];
-            $this->model->razon_social = $_POST['razon_social'];
-            $this->model->telefono = $_POST['telefono'];
-            $this->model->correo = $_POST['correo'];
+            $this->model->ruc = trim($_POST['ruc']);
+            $this->model->razon_social = trim($_POST['razon_social']);
+            $this->model->telefono = trim($_POST['telefono']);
+            $this->model->correo = trim($_POST['correo']);
             $this->model->fecha_registro = $_POST['fecha_registro'];
             $this->model->estado = 1;
 
-            // Validar RUC único
-            if ($this->model->rucExists($this->model->ruc)) {
-                $error = 'El RUC ya está registrado en el sistema';
+            // Validaciones
+            if (empty($this->model->ruc)) {
+                $error = 'El RUC es obligatorio';
+            } elseif (!preg_match('/^\d{11}$/', $this->model->ruc)) {
+                $error = 'El RUC debe tener 11 dígitos';
+            } elseif (empty($this->model->razon_social)) {
+                $error = 'La razón social es obligatoria';
             } else {
-                if($this->model->create()) {
-                    header("Location: index.php?controller=client_api&action=index");
-                    exit();
+                // Validar RUC único
+                if ($this->model->rucExists($this->model->ruc)) {
+                    $error = 'El RUC ya está registrado en el sistema';
                 } else {
-                    $error = 'Error al crear el cliente API';
+                    if($this->model->create()) {
+                        $success = 'Cliente API creado exitosamente';
+                        $_SESSION['success_message'] = $success;
+                        header("Location: index.php?controller=client_api&action=index");
+                        exit();
+                    } else {
+                        $error = 'Error al crear el cliente API';
+                    }
                 }
             }
         }
@@ -68,31 +80,47 @@ class ClientApiController {
      * Mostrar formulario y procesar edición de cliente API
      */
     public function edit() {
-        $this->model->id = $_GET['id'];
+        $this->model->id = intval($_GET['id']);
         $error = '';
+        $success = '';
         
         if($_POST) {
-            $this->model->id = $_POST['id'];
-            $this->model->ruc = $_POST['ruc'];
-            $this->model->razon_social = $_POST['razon_social'];
-            $this->model->telefono = $_POST['telefono'];
-            $this->model->correo = $_POST['correo'];
+            $this->model->id = intval($_POST['id']);
+            $this->model->ruc = trim($_POST['ruc']);
+            $this->model->razon_social = trim($_POST['razon_social']);
+            $this->model->telefono = trim($_POST['telefono']);
+            $this->model->correo = trim($_POST['correo']);
             $this->model->fecha_registro = $_POST['fecha_registro'];
-            $this->model->estado = $_POST['estado'];
+            $this->model->estado = intval($_POST['estado']);
 
-            // Validar RUC único excluyendo el actual
-            if ($this->model->rucExists($this->model->ruc, $this->model->id)) {
-                $error = 'El RUC ya está registrado en el sistema por otro cliente';
+            // Validaciones
+            if (empty($this->model->ruc)) {
+                $error = 'El RUC es obligatorio';
+            } elseif (!preg_match('/^\d{11}$/', $this->model->ruc)) {
+                $error = 'El RUC debe tener 11 dígitos';
+            } elseif (empty($this->model->razon_social)) {
+                $error = 'La razón social es obligatoria';
             } else {
-                if($this->model->update()) {
-                    header("Location: index.php?controller=client_api&action=index");
-                    exit();
+                // Validar RUC único excluyendo el actual
+                if ($this->model->rucExists($this->model->ruc, $this->model->id)) {
+                    $error = 'El RUC ya está registrado en el sistema por otro cliente';
                 } else {
-                    $error = 'Error al actualizar el cliente API';
+                    if($this->model->update()) {
+                        $success = 'Cliente API actualizado exitosamente';
+                        $_SESSION['success_message'] = $success;
+                        header("Location: index.php?controller=client_api&action=index");
+                        exit();
+                    } else {
+                        $error = 'Error al actualizar el cliente API';
+                    }
                 }
             }
         } else {
-            $this->model->readOne();
+            if (!$this->model->readOne()) {
+                $_SESSION['error_message'] = 'Cliente API no encontrado';
+                header("Location: index.php?controller=client_api&action=index");
+                exit();
+            }
         }
         
         $db_connection = $this->db;
@@ -103,29 +131,74 @@ class ClientApiController {
      * Eliminar cliente API (eliminación lógica)
      */
     public function delete() {
-        $this->model->id = $_GET['id'];
-        if($this->model->delete()) {
+        $this->model->id = intval($_GET['id']);
+        
+        // Verificar si el cliente tiene tokens activos
+        $tokenModel = new TokenApi($this->db);
+        $tokensActivos = $tokenModel->getByClient($this->model->id);
+        
+        if ($tokensActivos->rowCount() > 0) {
+            $_SESSION['error_message'] = 'No se puede eliminar el cliente porque tiene tokens activos asociados';
             header("Location: index.php?controller=client_api&action=index");
             exit();
-        } else {
-            // Mostrar error si no se puede eliminar
-            echo "<script>alert('Error al eliminar el cliente API'); window.location.href='index.php?controller=client_api&action=index';</script>";
         }
+        
+        if($this->model->delete()) {
+            $_SESSION['success_message'] = 'Cliente API eliminado exitosamente';
+        } else {
+            $_SESSION['error_message'] = 'Error al eliminar el cliente API';
+        }
+        
+        header("Location: index.php?controller=client_api&action=index");
+        exit();
     }
 
     /**
      * NUEVO: Mostrar detalles de un cliente API específico
      */
     public function view() {
-        $this->model->id = $_GET['id'];
+        $this->model->id = intval($_GET['id']);
         
         if($this->model->readOne()) {
+            // Obtener tokens del cliente
+            $tokenModel = new TokenApi($this->db);
+            $tokens = $tokenModel->getByClient($this->model->id);
+            
+            // Obtener estadísticas de requests
+            $requestModel = new CountRequest($this->db);
+            $requests = $requestModel->getByClient($this->model->id);
+            
             $db_connection = $this->db;
             include_once 'views/client_api/view.php';
         } else {
+            $_SESSION['error_message'] = 'Cliente API no encontrado';
             header("Location: index.php?controller=client_api&action=index");
             exit();
         }
+    }
+
+    /**
+     * NUEVO: Activar/Desactivar cliente API
+     */
+    public function toggleStatus() {
+        $this->model->id = intval($_GET['id']);
+        
+        if($this->model->readOne()) {
+            $nuevoEstado = $this->model->estado == 1 ? 0 : 1;
+            $this->model->estado = $nuevoEstado;
+            
+            if($this->model->update()) {
+                $estadoTexto = $nuevoEstado == 1 ? 'activado' : 'desactivado';
+                $_SESSION['success_message'] = "Cliente API {$estadoTexto} exitosamente";
+            } else {
+                $_SESSION['error_message'] = 'Error al cambiar el estado del cliente API';
+            }
+        } else {
+            $_SESSION['error_message'] = 'Cliente API no encontrado';
+        }
+        
+        header("Location: index.php?controller=client_api&action=index");
+        exit();
     }
 }
 ?>

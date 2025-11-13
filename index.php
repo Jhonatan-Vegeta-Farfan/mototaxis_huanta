@@ -6,7 +6,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit;
 }
-// ... resto del código
 
 // Incluir modelos
 require_once 'models/Database.php';
@@ -27,9 +26,19 @@ require_once 'controllers/MototaxiController.php';
 $database = new Database();
 $db = $database->getConnection();
 
+// Verificar conexión a la base de datos
+if (!$db) {
+    die("Error de conexión a la base de datos");
+}
+
 // Obtener controlador y acción
 $controller = isset($_GET['controller']) ? $_GET['controller'] : '';
 $action = isset($_GET['action']) ? $_GET['action'] : 'index';
+
+// Mostrar mensajes de sesión si existen
+$success_message = $_SESSION['success_message'] ?? '';
+$error_message = $_SESSION['error_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 
 // Si no hay controlador específico, mostrar dashboard
 if (empty($controller)) {
@@ -46,16 +55,36 @@ if (empty($controller)) {
     $totalTokens = $tokenApiModel->read()->rowCount();
     $totalRequests = $countRequestModel->read()->rowCount();
 
+    // Obtener requests de hoy
+    $requestsHoy = $countRequestModel->getStats(date('Y-m-d'), date('Y-m-d'))['requests_hoy'];
+
     // Incluir header del sistema
-    $pageTitle = 'Sistema Mototaxis Huanta';
+    $pageTitle = 'Dashboard - Sistema Mototaxis Huanta';
     include_once 'views/layouts/header.php';
 ?>
 
 <!-- Dashboard Content -->
 <div class="dashboard-content" style="min-height: calc(100vh - 120px);">
     
+    <!-- Mostrar mensajes de sesión -->
+    <?php if ($success_message): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?php echo htmlspecialchars($success_message); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($error_message): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <?php echo htmlspecialchars($error_message); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
     <!-- Header Corporativo Compacto -->
-    <div class="header-corporativo-compacto bg-primary text-white py-3 mb-0">
+    <div class="header-corporativo-compacto bg-primary text-white py-3 mb-4">
         <div class="container-fluid">
             <div class="row align-items-center">
                 <div class="col-md-6">
@@ -75,7 +104,7 @@ if (empty($controller)) {
                             <small class="d-block opacity-75">Bienvenido</small>
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fas fa-user-tie"></i>
-                                <strong><?php echo $_SESSION['username']; ?></strong>
+                                <strong><?php echo htmlspecialchars($_SESSION['username'] ?? 'Usuario'); ?></strong>
                                 <small class="opacity-75">Administrador del Sistema</small>
                             </div>
                         </div>
@@ -98,7 +127,7 @@ if (empty($controller)) {
             
             <div class="row g-3">
                 <!-- Empresas -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="100">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-primary">
@@ -109,7 +138,7 @@ if (empty($controller)) {
                         <div class="card-body-corp">
                             <h3 class="card-title-corp">EMPRESAS</h3>
                             <div class="card-number-corp" data-count="<?php echo $totalEmpresas; ?>">0</div>
-                            <p class="card-desc-corp">Empresas de transporte registradas</p>
+                            <p class="card-desc-corp">Empresas de transporte</p>
                         </div>
                         <div class="card-footer-corp">
                             <a href="index.php?controller=empresas&action=index" class="btn-corp-primary">
@@ -121,7 +150,7 @@ if (empty($controller)) {
                 </div>
 
                 <!-- Mototaxis -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="200">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-success">
@@ -144,7 +173,7 @@ if (empty($controller)) {
                 </div>
 
                 <!-- Clientes API -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="300">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-info">
@@ -167,7 +196,7 @@ if (empty($controller)) {
                 </div>
 
                 <!-- Tokens API -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="400">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-warning">
@@ -189,14 +218,14 @@ if (empty($controller)) {
                     </div>
                 </div>
 
-                <!-- Requests -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <!-- Requests Totales -->
+                <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="500">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-secondary">
                                 <i class="fas fa-chart-bar"></i>
                             </div>
-                            <div class="card-badge">Procesadas</div>
+                            <div class="card-badge">Totales</div>
                         </div>
                         <div class="card-body-corp">
                             <h3 class="card-title-corp">SOLICITUDES</h3>
@@ -206,6 +235,29 @@ if (empty($controller)) {
                         <div class="card-footer-corp">
                             <a href="index.php?controller=count_request&action=index" class="btn-corp-primary">
                                 <span>Gestionar</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requests Hoy -->
+                <div class="col-xl-2 col-lg-4 col-md-6">
+                    <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="600">
+                        <div class="card-header-corp">
+                            <div class="card-icon-corp bg-danger">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="card-badge">Hoy</div>
+                        </div>
+                        <div class="card-body-corp">
+                            <h3 class="card-title-corp">SOLICITUDES</h3>
+                            <div class="card-number-corp" data-count="<?php echo $requestsHoy; ?>">0</div>
+                            <p class="card-desc-corp">Solicitudes hoy</p>
+                        </div>
+                        <div class="card-footer-corp">
+                            <a href="index.php?controller=count_request&action=index" class="btn-corp-primary">
+                                <span>Ver</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
@@ -283,6 +335,36 @@ if (empty($controller)) {
                         </div>
                     </a>
                 </div>
+
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <a href="api.php" target="_blank" class="action-card-corp" data-aos="zoom-in" data-aos-delay="500">
+                        <div class="action-icon-corp">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="action-content-corp">
+                            <h4>API Pública</h4>
+                            <p>Documentación y pruebas de API</p>
+                        </div>
+                        <div class="action-arrow-corp">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <a href="index.php?controller=count_request&action=estadisticas" class="action-card-corp" data-aos="zoom-in" data-aos-delay="600">
+                        <div class="action-icon-corp">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="action-content-corp">
+                            <h4>Estadísticas</h4>
+                            <p>Ver reportes y métricas</p>
+                        </div>
+                        <div class="action-arrow-corp">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -296,7 +378,7 @@ if (empty($controller)) {
             </div>
             
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="status-card-corp" data-aos="fade-right">
                         <div class="status-icon online">
                             <i class="fas fa-server"></i>
@@ -307,7 +389,7 @@ if (empty($controller)) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="status-card-corp" data-aos="fade-right" data-aos-delay="100">
                         <div class="status-icon online">
                             <i class="fas fa-database"></i>
@@ -318,7 +400,7 @@ if (empty($controller)) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="status-card-corp" data-aos="fade-right" data-aos-delay="200">
                         <div class="status-icon online">
                             <i class="fas fa-plug"></i>
@@ -326,6 +408,90 @@ if (empty($controller)) {
                         <div class="status-content">
                             <h5>Servicio API</h5>
                             <span class="status-text online">Activo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="status-card-corp" data-aos="fade-right" data-aos-delay="300">
+                        <div class="status-icon online">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="status-content">
+                            <h5>Seguridad</h5>
+                            <span class="status-text online">Protegido</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Última Actividad -->
+    <div class="ultima-actividad py-4">
+        <div class="container-fluid">
+            <div class="section-header-corp text-center mb-4">
+                <h2 class="section-title-corp text-dark">ÚLTIMA ACTIVIDAD</h2>
+                <p class="text-muted">Registros y solicitudes recientes</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-motorcycle me-2"></i>Últimos Mototaxis Registrados</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php
+                            $mototaxisRecientes = $mototaxiModel->getRecent(5);
+                            if ($mototaxisRecientes && $mototaxisRecientes->rowCount() > 0):
+                            ?>
+                            <div class="list-group list-group-flush">
+                                <?php while ($mototaxi = $mototaxisRecientes->fetch(PDO::FETCH_ASSOC)): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1"><?php echo htmlspecialchars($mototaxi['numero_asignado'] ?? 'N/A'); ?></h6>
+                                        <small class="text-muted"><?php echo htmlspecialchars($mototaxi['nombre_completo'] ?? 'N/A'); ?></small>
+                                    </div>
+                                    <small class="text-muted"><?php echo date('d/m/Y', strtotime($mototaxi['fecha_registro'] ?? 'now')); ?></small>
+                                </div>
+                                <?php endwhile; ?>
+                            </div>
+                            <?php else: ?>
+                            <p class="text-muted text-center">No hay mototaxis registrados recientemente</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Últimas Solicitudes API</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php
+                            $requestsRecientes = $countRequestModel->read();
+                            if ($requestsRecientes && $requestsRecientes->rowCount() > 0):
+                                $count = 0;
+                            ?>
+                            <div class="list-group list-group-flush">
+                                <?php while ($request = $requestsRecientes->fetch(PDO::FETCH_ASSOC) && $count < 5): 
+                                    $razonSocial = $request['razon_social'] ?? 'Cliente no disponible';
+                                    $fecha = $request['fecha'] ?? date('Y-m-d H:i:s');
+                                    $tipo = $request['tipo'] ?? 'consulta';
+                                ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1"><?php echo htmlspecialchars($tipo); ?></h6>
+                                        <small class="text-muted"><?php echo htmlspecialchars($razonSocial); ?></small>
+                                    </div>
+                                    <small class="text-muted"><?php echo date('H:i', strtotime($fecha)); ?></small>
+                                </div>
+                                <?php $count++; endwhile; ?>
+                            </div>
+                            <?php else: ?>
+                            <p class="text-muted text-center">No hay solicitudes recientes</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -400,6 +566,7 @@ if (empty($controller)) {
 .card-icon-corp.bg-info { background: linear-gradient(135deg, #17a2b8, #138496); }
 .card-icon-corp.bg-warning { background: linear-gradient(135deg, #ffc107, #e0a800); }
 .card-icon-corp.bg-secondary { background: linear-gradient(135deg, #6c757d, #545b62); }
+.card-icon-corp.bg-danger { background: linear-gradient(135deg, #dc3545, #c82333); }
 
 .card-badge {
     background: #e9ecef;
@@ -623,18 +790,15 @@ function animateCounters() {
     });
 }
 
-// Inicializar AOS
-if (typeof AOS !== 'undefined') {
-    AOS.init({
-        duration: 800,
-        once: true,
-        offset: 100
-    });
-}
-
-// Ejecutar cuando el DOM esté listo
+// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     animateCounters();
+    
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });
 </script>
 
@@ -646,54 +810,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Enrutamiento normal para otros controladores
     switch($controller) {
         case 'client_api':
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
             $controllerObj = new ClientApiController($db);
             break;
         case 'tokens_api':
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
             $controllerObj = new TokenApiController($db);
             break;
         case 'count_request':
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
             $controllerObj = new CountRequestController($db);
             break;
         case 'empresas':
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
             $controllerObj = new EmpresaController($db);
             break;
         case 'mototaxis':
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
             $controllerObj = new MototaxiController($db);
             break;
         default:
-            if (!isset($_SESSION['loggedin'])) {
-                header("Location: login.php");
-                exit;
-            }
-            $controllerObj = new EmpresaController($db);
-            $action = 'index';
+            $_SESSION['error_message'] = 'Controlador no encontrado';
+            header("Location: index.php");
+            exit;
     }
 
     // Ejecutar acción
     if(method_exists($controllerObj, $action)) {
         $controllerObj->$action();
     } else {
-        echo "Acción no encontrada";
+        $_SESSION['error_message'] = 'Acción no encontrada';
+        header("Location: index.php");
+        exit;
     }
 }
 ?>

@@ -14,10 +14,10 @@ class TokenApi {
     }
 
     /**
-     * Leer todos los tokens API
+     * Leer todos los tokens API con información del cliente
      */
     public function read() {
-        $query = "SELECT t.*, c.razon_social, c.ruc
+        $query = "SELECT t.*, c.razon_social, c.ruc, c.estado as cliente_estado
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  ORDER BY t.id DESC";
@@ -33,7 +33,7 @@ class TokenApi {
         $query = "SELECT t.*, c.razon_social, c.ruc
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 WHERE t.id_client_api = ?
+                 WHERE t.id_client_api = ? AND t.estado = 1
                  ORDER BY t.id DESC";
         
         $stmt = $this->conn->prepare($query);
@@ -47,15 +47,24 @@ class TokenApi {
      */
     public function getByToken($token) {
         try {
-            $query = "SELECT * FROM " . $this->table_name . " WHERE token = ? LIMIT 0,1";
+            $query = "SELECT t.*, c.razon_social, c.ruc, c.estado as cliente_estado
+                     FROM " . $this->table_name . " t 
+                     LEFT JOIN client_api c ON t.id_client_api = c.id 
+                     WHERE t.token = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1, $token);
             $stmt->execute();
             
             if ($stmt->rowCount() > 0) {
-                return $stmt->fetch(PDO::FETCH_ASSOC);
+                $tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Verificar que tanto el token como el cliente estén activos
+                if ($tokenData['estado'] == 1 && $tokenData['cliente_estado'] == 1) {
+                    return $tokenData;
+                }
+                return null; // Token o cliente inactivo
             }
-            return null; // Retornar null en lugar de false para mejor consistencia
+            return null;
         } catch (PDOException $e) {
             error_log("Error en getByToken: " . $e->getMessage());
             return null;
@@ -70,7 +79,10 @@ class TokenApi {
             $this->id = $id;
         }
         
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ? LIMIT 0,1";
+        $query = "SELECT t.*, c.razon_social, c.ruc
+                 FROM " . $this->table_name . " t 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE t.id = ? LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id);
         
@@ -96,7 +108,7 @@ class TokenApi {
      */
     public function generateToken($client_id) {
         // Primero obtener información del cliente
-        $query = "SELECT razon_social, ruc FROM client_api WHERE id = ? LIMIT 0,1";
+        $query = "SELECT razon_social, ruc FROM client_api WHERE id = ? AND estado = 1 LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $client_id);
         $stmt->execute();
@@ -105,14 +117,14 @@ class TokenApi {
             $client = $stmt->fetch(PDO::FETCH_ASSOC);
             
             // Contar tokens existentes del cliente
-            $countQuery = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ? AND estado = 1";
+            $countQuery = "SELECT COUNT(*) as total FROM tokens_api WHERE id_client_api = ?";
             $countStmt = $this->conn->prepare($countQuery);
             $countStmt->bindParam(1, $client_id);
             $countStmt->execute();
             $tokenCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'] + 1;
             
-            // Generar token base aleatorio
-            $base_token = bin2hex(random_bytes(16)); // 32 caracteres hexadecimales
+            // Generar token base aleatorio seguro
+            $base_token = bin2hex(random_bytes(24)); // 48 caracteres hexadecimales más seguro
             
             // Crear identificador del cliente (primeras 3 letras de razón social)
             $client_identifier = substr($client['razon_social'], 0, 3);
@@ -124,7 +136,7 @@ class TokenApi {
                 $client_identifier = substr($client['ruc'], 0, 3);
             }
             
-            return $base_token . '-' . $client_identifier . '-' . $tokenCount;
+            return $base_token . '-' . $client_identifier . '-' . $tokenCount . '-' . time();
         }
         
         return false;
@@ -134,20 +146,21 @@ class TokenApi {
      * Crear nuevo token automáticamente
      */
     public function create() {
-        // Validar que el cliente existe
+        // Validar que el cliente existe y está activo
         $query = "SELECT id FROM client_api WHERE id = ? AND estado = 1 LIMIT 0,1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->id_client_api);
+        
         if (!$stmt->execute() || $stmt->rowCount() === 0) {
-            return false;
+            throw new Exception("Cliente no existe o está inactivo");
         }
 
         // Generar token automáticamente
         $this->token = $this->generateToken($this->id_client_api);
-        $this->fecha_registro = date('Y-m-d'); // Fecha actual automática
+        $this->fecha_registro = date('Y-m-d H:i:s'); // Fecha y hora actual
         
         if (!$this->token) {
-            return false;
+            throw new Exception("Error generando el token");
         }
 
         $query = "INSERT INTO " . $this->table_name . " 
@@ -216,6 +229,20 @@ class TokenApi {
     }
 
     /**
+     * Activar token
+     */
+    public function activate() {
+        $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        
+        if($stmt->execute()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Obtener lista de clientes activos para dropdown
      */
     public function getClientes() {
@@ -241,6 +268,40 @@ class TokenApi {
         $stmt->execute($params);
         
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Validar token completo (token y cliente activos)
+     */
+    public function validateToken($token) {
+        $tokenData = $this->getByToken($token);
+        
+        if (!$tokenData) {
+            return [
+                'valid' => false,
+                'message' => '❌ Token no existe o es inválido'
+            ];
+        }
+        
+        if ($tokenData['estado'] == 0) {
+            return [
+                'valid' => false,
+                'message' => '❌ Token inactivo'
+            ];
+        }
+        
+        if ($tokenData['cliente_estado'] == 0) {
+            return [
+                'valid' => false,
+                'message' => '❌ Cliente inactivo'
+            ];
+        }
+        
+        return [
+            'valid' => true,
+            'message' => '✅ Token válido y activo',
+            'data' => $tokenData
+        ];
     }
 }
 ?>

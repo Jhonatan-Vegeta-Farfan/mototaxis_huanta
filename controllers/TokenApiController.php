@@ -30,6 +30,7 @@ class TokenApiController {
     public function create() {
         $clientes = $this->model->getClientes();
         $error = '';
+        $success = '';
         $db_connection = $this->db;
         
         if($_POST) {
@@ -37,11 +38,20 @@ class TokenApiController {
             // Token y fecha se generan automáticamente
             $this->model->estado = 1;
 
-            if($this->model->create()) {
-                header("Location: index.php?controller=tokens_api&action=index");
-                exit();
-            } else {
-                $error = 'Error al crear el token. Verifique que el cliente exista.';
+            try {
+                if($this->model->create()) {
+                    $success = 'Token creado exitosamente. Token generado: ' . $this->model->token;
+                    // Mostrar mensaje de éxito
+                    echo "<script>
+                        alert('Token creado exitosamente: " . $this->model->token . "');
+                        window.location.href = 'index.php?controller=tokens_api&action=index';
+                    </script>";
+                    return;
+                } else {
+                    $error = 'Error al crear el token. Verifique que el cliente exista.';
+                }
+            } catch (Exception $e) {
+                $error = 'Error: ' . $e->getMessage();
             }
         }
         include_once 'views/tokens_api/create.php';
@@ -54,6 +64,7 @@ class TokenApiController {
         $this->model->id = $_GET['id'];
         $clientes = $this->model->getClientes();
         $error = '';
+        $success = '';
         $db_connection = $this->db;
         
         if($_POST) {
@@ -68,7 +79,8 @@ class TokenApiController {
                 $error = 'El token ya está en uso por otro registro';
             } else {
                 if($this->model->update()) {
-                    header("Location: index.php?controller=tokens_api&action=index");
+                    $success = 'Token actualizado exitosamente';
+                    header("Location: index.php?controller=tokens_api&action=index&success=1");
                     exit();
                 } else {
                     $error = 'Error al actualizar el token';
@@ -86,10 +98,29 @@ class TokenApiController {
     public function delete() {
         $this->model->id = $_GET['id'];
         if($this->model->delete()) {
-            header("Location: index.php?controller=tokens_api&action=index");
+            header("Location: index.php?controller=tokens_api&action=index&deleted=1");
             exit();
         } else {
-            echo "<script>alert('Error al eliminar el token'); window.location.href='index.php?controller=tokens_api&action=index';</script>";
+            echo "<script>
+                alert('Error al eliminar el token');
+                window.location.href = 'index.php?controller=tokens_api&action=index';
+            </script>";
+        }
+    }
+
+    /**
+     * Activar token
+     */
+    public function activate() {
+        $this->model->id = $_GET['id'];
+        if($this->model->activate()) {
+            header("Location: index.php?controller=tokens_api&action=index&activated=1");
+            exit();
+        } else {
+            echo "<script>
+                alert('Error al activar el token');
+                window.location.href = 'index.php?controller=tokens_api&action=index';
+            </script>";
         }
     }
 
@@ -103,6 +134,33 @@ class TokenApiController {
             $clientes = $this->model->getClientes();
             $db_connection = $this->db;
             include_once 'views/tokens_api/view.php';
+        } else {
+            header("Location: index.php?controller=tokens_api&action=index");
+            exit();
+        }
+    }
+
+    /**
+     * NUEVO: Validar token desde el panel administrativo
+     */
+    public function validate() {
+        $this->model->id = $_GET['id'];
+        
+        if($this->model->readOne()) {
+            // Validar el token
+            $validation = $this->model->validateToken($this->model->token);
+            
+            if ($validation['valid']) {
+                echo "<script>
+                    alert('Token válido y activo');
+                    window.location.href = 'index.php?controller=tokens_api&action=index';
+                </script>";
+            } else {
+                echo "<script>
+                    alert('Token inválido: " . $validation['message'] . "');
+                    window.location.href = 'index.php?controller=tokens_api&action=index';
+                </script>";
+            }
         } else {
             header("Location: index.php?controller=tokens_api&action=index");
             exit();

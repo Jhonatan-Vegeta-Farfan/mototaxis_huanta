@@ -21,80 +21,113 @@ class ApiPublicController {
 
     // VISTA PÚBLICA DE DOCUMENTACIÓN
     public function index() {
+        // Configurar headers para evitar caché
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+        
         include __DIR__ . '/../views/api_public/index.php';
     }
 
-    // LISTAR MOTOTAXIS (JSON)
+    // LISTAR MOTOTAXIS (JSON) - MEJORADO
     public function listarMototaxis() {
         $this->configurarHeadersJSON();
         
         // Validar token
-        $tokenValido = $this->validarTokenRequest();
-        if (!$tokenValido) return;
+        $tokenValidation = $this->validarTokenRequest();
+        if (!$tokenValidation['valid']) {
+            echo json_encode([
+                'success' => false,
+                'message' => $tokenValidation['message'],
+                'error_code' => 'TOKEN_INVALID'
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
         
         try {
-            $pagina = $_GET['pagina'] ?? 1;
-            $porPagina = $_GET['por_pagina'] ?? 10;
+            $pagina = max(1, intval($_GET['pagina'] ?? 1));
+            $porPagina = min(100, max(1, intval($_GET['por_pagina'] ?? 10)));
             
-            // Usar el método read del modelo Mototaxi
-            $stmt = $this->mototaxiModel->read();
-            $totalMototaxis = $stmt->rowCount();
-            
-            // Paginación manual
+            // Calcular offset
             $offset = ($pagina - 1) * $porPagina;
-            $mototaxisPaginados = [];
-            $contador = 0;
             
+            // Consulta optimizada con paginación
+            $query = "SELECT SQL_CALC_FOUND_ROWS m.*, e.razon_social as empresa, 
+                             e.ruc as ruc_empresa, e.representante_legal as representante_empresa
+                     FROM mototaxis m 
+                     LEFT JOIN empresas e ON m.id_empresa = e.id 
+                     ORDER BY m.id DESC
+                     LIMIT :offset, :limit";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $mototaxis = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                if ($contador >= $offset && $contador < ($offset + $porPagina)) {
-                    $mototaxisPaginados[] = $this->formatearDatosMototaxi($row);
-                }
-                $contador++;
-                if ($contador >= ($offset + $porPagina)) break;
+                $mototaxis[] = $this->formatearDatosMototaxi($row);
             }
+            
+            // Obtener total de registros
+            $totalStmt = $this->db->query("SELECT FOUND_ROWS() as total");
+            $totalRegistros = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Lista de mototaxis obtenida exitosamente',
-                'data' => $mototaxisPaginados,
+                'data' => $mototaxis,
                 'paginacion' => [
-                    'pagina_actual' => (int)$pagina,
-                    'por_pagina' => (int)$porPagina,
-                    'total_registros' => $totalMototaxis,
-                    'total_paginas' => ceil($totalMototaxis / $porPagina)
+                    'pagina_actual' => $pagina,
+                    'por_pagina' => $porPagina,
+                    'total_registros' => $totalRegistros,
+                    'total_paginas' => ceil($totalRegistros / $porPagina)
+                ],
+                'metadata' => [
+                    'fecha_consulta' => date('c'),
+                    'version_api' => '1.0.0'
                 ]
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
+            error_log("Error en listarMototaxis: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error al obtener mototaxis: ' . $e->getMessage()
+                'message' => 'Error interno del servidor',
+                'error_code' => 'INTERNAL_ERROR'
             ]);
         }
     }
 
-    // BUSCAR MOTOTAXI POR NÚMERO ASIGNADO (JSON)
+    // BUSCAR MOTOTAXI POR NÚMERO ASIGNADO (JSON) - MEJORADO
     public function buscarMototaxi() {
         $this->configurarHeadersJSON();
         
         // Validar token
-        $tokenValido = $this->validarTokenRequest();
-        if (!$tokenValido) return;
+        $tokenValidation = $this->validarTokenRequest();
+        if (!$tokenValidation['valid']) {
+            echo json_encode([
+                'success' => false,
+                'message' => $tokenValidation['message'],
+                'error_code' => 'TOKEN_INVALID'
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
         
         try {
-            $numero = $_GET['numero'] ?? '';
+            $numero = trim($_GET['numero'] ?? '');
             
             if (empty($numero)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Parámetro "numero" requerido para la búsqueda'
+                    'message' => 'Parámetro "numero" requerido para la búsqueda',
+                    'error_code' => 'MISSING_PARAMETER'
                 ]);
                 return;
             }
             
-            // Buscar por número asignado usando el modelo
+            // Buscar por número asignado
             $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
                              e.representante_legal as representante_empresa
                      FROM mototaxis m 
@@ -111,7 +144,8 @@ class ApiPublicController {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Mototaxi no encontrado con el número: ' . $numero
+                    'message' => 'Mototaxi no encontrado con el número: ' . $numero,
+                    'error_code' => 'NOT_FOUND'
                 ]);
                 return;
             }
@@ -124,50 +158,69 @@ class ApiPublicController {
                 'message' => 'Mototaxi encontrado exitosamente',
                 'data' => $mototaxiFormateado,
                 'metadata' => [
-                    'fecha_consulta' => date('Y-m-d H:i:s'),
+                    'fecha_consulta' => date('c'),
                     'numero_buscado' => $numero,
                     'total_resultados' => 1
                 ]
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
+            error_log("Error en buscarMototaxi: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error en la búsqueda: ' . $e->getMessage()
+                'message' => 'Error interno del servidor',
+                'error_code' => 'INTERNAL_ERROR'
             ]);
         }
     }
 
-    // BUSCAR MOTOTAXIS POR DNI (JSON)
+    // BUSCAR MOTOTAXIS POR DNI (JSON) - MEJORADO
     public function buscarPorDNI() {
         $this->configurarHeadersJSON();
         
         // Validar token
-        $tokenValido = $this->validarTokenRequest();
-        if (!$tokenValido) return;
+        $tokenValidation = $this->validarTokenRequest();
+        if (!$tokenValidation['valid']) {
+            echo json_encode([
+                'success' => false,
+                'message' => $tokenValidation['message'],
+                'error_code' => 'TOKEN_INVALID'
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
         
         try {
-            $dni = $_GET['dni'] ?? '';
+            $dni = trim($_GET['dni'] ?? '');
             
             if (empty($dni)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Parámetro "dni" requerido para la búsqueda'
+                    'message' => 'Parámetro "dni" requerido para la búsqueda',
+                    'error_code' => 'MISSING_PARAMETER'
                 ]);
                 return;
             }
             
-            // Buscar por DNI usando el modelo
+            if (!preg_match('/^\d{8}$/', $dni)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Formato de DNI inválido. Debe tener 8 dígitos.',
+                    'error_code' => 'INVALID_DNI_FORMAT'
+                ]);
+                return;
+            }
+            
+            // Buscar por DNI exacto
             $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa
                      FROM mototaxis m 
                      LEFT JOIN empresas e ON m.id_empresa = e.id 
-                     WHERE m.dni LIKE ?";
+                     WHERE m.dni = ?";
             
             $stmt = $this->db->prepare($query);
-            $dniParam = "%$dni%";
-            $stmt->bindParam(1, $dniParam);
+            $stmt->bindParam(1, $dni);
             $stmt->execute();
             
             $mototaxis = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -177,46 +230,48 @@ class ApiPublicController {
             
             echo json_encode([
                 'success' => true,
-                'message' => 'Búsqueda por DNI completada',
+                'message' => count($mototaxisFormateados) > 0 ? 
+                            'Búsqueda por DNI completada' : 
+                            'No se encontraron mototaxis con el DNI proporcionado',
                 'data' => $mototaxisFormateados,
-                'total' => count($mototaxis),
+                'total' => count($mototaxisFormateados),
                 'metadata' => [
-                    'fecha_consulta' => date('Y-m-d H:i:s'),
+                    'fecha_consulta' => date('c'),
                     'dni_buscado' => $dni
                 ]
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
+            error_log("Error en buscarPorDNI: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error en la búsqueda: ' . $e->getMessage()
+                'message' => 'Error interno del servidor',
+                'error_code' => 'INTERNAL_ERROR'
             ]);
         }
     }
 
-    // VALIDAR TOKEN (JSON) - ENDPOINT PÚBLICO
+    // VALIDAR TOKEN (JSON) - ENDPOINT PÚBLICO MEJORADO
     public function validarTokenEndpoint() {
         $this->configurarHeadersJSON();
         
-        $tokenValido = $this->validarTokenRequest();
-        if (!$tokenValido) return;
-        
-        // Si llegó aquí, el token es válido
-        $headers = getallheaders();
-        $token = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-        $token = str_replace('Bearer ', '', $token);
-        
-        // Si no hay token en el header, intentar obtenerlo de los parámetros GET
-        if (empty($token)) {
-            $token = $_GET['token'] ?? '';
+        $tokenValidation = $this->validarTokenRequest();
+        if (!$tokenValidation['valid']) {
+            echo json_encode([
+                'success' => false,
+                'message' => $tokenValidation['message'],
+                'error_code' => 'TOKEN_INVALID'
+            ], JSON_UNESCAPED_UNICODE);
+            return;
         }
         
-        $tokenData = $this->tokenApiModel->getByToken($token);
+        // Si llegó aquí, el token es válido
+        $tokenData = $tokenValidation['token_data'];
         
-        // Obtener información del cliente
+        // Obtener información completa del cliente
         $clientData = null;
-        if ($tokenData && is_array($tokenData)) {
+        if ($tokenData) {
             $clientQuery = "SELECT * FROM client_api WHERE id = ?";
             $clientStmt = $this->db->prepare($clientQuery);
             $clientStmt->bindParam(1, $tokenData['id_client_api']);
@@ -238,7 +293,7 @@ class ApiPublicController {
         
         echo json_encode([
             'success' => true,
-            'message' => '✅ Token válido',
+            'message' => '✅ Token válido y activo',
             'data' => [
                 'token' => [
                     'id' => $tokenData['id'] ?? null,
@@ -247,19 +302,75 @@ class ApiPublicController {
                     'estado' => (bool)($tokenData['estado'] ?? false)
                 ],
                 'cliente' => $clientData
+            ],
+            'metadata' => [
+                'fecha_validacion' => date('c'),
+                'valido_hasta' => date('c', strtotime('+1 hour'))
             ]
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    // MÉTODOS PRIVADOS
+    // NUEVO ENDPOINT: ESTADÍSTICAS DEL SISTEMA
+    public function estadisticas() {
+        $this->configurarHeadersJSON();
+        
+        // Validar token
+        $tokenValidation = $this->validarTokenRequest();
+        if (!$tokenValidation['valid']) {
+            echo json_encode([
+                'success' => false,
+                'message' => $tokenValidation['message'],
+                'error_code' => 'TOKEN_INVALID'
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        
+        try {
+            // Obtener estadísticas
+            $stats = [];
+            
+            // Total mototaxis
+            $stmt = $this->db->query("SELECT COUNT(*) as total FROM mototaxis");
+            $stats['total_mototaxis'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Total empresas
+            $stmt = $this->db->query("SELECT COUNT(*) as total FROM empresas");
+            $stats['total_empresas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Requests hoy
+            $stmt = $this->db->query("SELECT COUNT(*) as total FROM count_request WHERE DATE(fecha) = CURDATE()");
+            $stats['requests_hoy'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Estadísticas obtenidas exitosamente',
+                'data' => $stats,
+                'metadata' => [
+                    'fecha_consulta' => date('c')
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            error_log("Error en estadisticas: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+                'error_code' => 'INTERNAL_ERROR'
+            ]);
+        }
+    }
+
+    // MÉTODOS PRIVADOS MEJORADOS
     private function configurarHeadersJSON() {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-        header("Access-Control-Allow-Headers: Authorization, Content-Type");
+        header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key");
+        header("Access-Control-Max-Age: 3600");
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            exit;
+            exit(0);
         }
     }
 
@@ -270,50 +381,50 @@ class ApiPublicController {
         
         // Si no hay token en el header, intentar obtenerlo de los parámetros GET
         if (empty($token)) {
-            $token = $_GET['token'] ?? '';
+            $token = $_GET['token'] ?? $_GET['api_key'] ?? '';
         }
         
         if (empty($token)) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => '❌ Token de acceso requerido'
-            ]);
-            return false;
+            return [
+                'valid' => false,
+                'message' => '❌ Token de acceso requerido. Incluya el token en el header Authorization o parámetro token.'
+            ];
         }
         
-        $tokenData = $this->tokenApiModel->getByToken($token);
+        // Validar token usando el modelo mejorado
+        $validation = $this->tokenApiModel->validateToken($token);
         
-        if (!$tokenData || !is_array($tokenData)) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => '❌ Token no existe'
-            ]);
-            return false;
-        }
-        
-        if (!$tokenData['estado']) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => '❌ Token inactivo'
-            ]);
-            return false;
+        if (!$validation['valid']) {
+            return [
+                'valid' => false,
+                'message' => '❌ ' . $validation['message']
+            ];
         }
         
         // Registrar request
-        $this->registrarRequest($tokenData['id'], 'consulta_api');
+        $this->registrarRequest($validation['data']['id'], 'consulta_api');
         
-        return true;
+        return [
+            'valid' => true,
+            'token_data' => $validation['data'],
+            'message' => 'Token válido'
+        ];
     }
 
     private function registrarRequest($tokenId, $tipo) {
         try {
-            $query = "INSERT INTO count_request (id_token_api, tipo, fecha) VALUES (?, ?, NOW())";
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+            $endpoint = $_SERVER['REQUEST_URI'] ?? 'Desconocido';
+            
+            $query = "INSERT INTO count_request (id_token_api, tipo, fecha, ip, user_agent, endpoint) 
+                     VALUES (?, ?, NOW(), ?, ?, ?)";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(1, $tokenId);
             $stmt->bindParam(2, $tipo);
+            $stmt->bindParam(3, $ip);
+            $stmt->bindParam(4, $userAgent);
+            $stmt->bindParam(5, $endpoint);
             $stmt->execute();
         } catch (Exception $e) {
             // Silenciar errores de registro para no afectar la respuesta principal
@@ -344,7 +455,7 @@ class ApiPublicController {
                 'representante_legal' => $mototaxi['representante_empresa'] ?? ''
             ],
             'estado_registro' => 'ACTIVO',
-            'fecha_actualizacion' => date('Y-m-d H:i:s')
+            'fecha_actualizacion' => date('c')
         ];
     }
 }
