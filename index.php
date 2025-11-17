@@ -356,10 +356,7 @@ if (empty($controller)) {
                         <div class="action-icon-corp">
                             <i class="fas fa-chart-pie"></i>
                         </div>
-                        <div class="action-content-corp">
-                            <h4>Estadísticas</h4>
-                            <p>Ver reportes y métricas</p>
-                        </div>
+
                         <div class="action-arrow-corp">
                             <i class="fas fa-chevron-right"></i>
                         </div>
