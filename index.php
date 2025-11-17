@@ -350,12 +350,6 @@ if (empty($controller)) {
                         </div>
                     </a>
                 </div>
-
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <a href="index.php?controller=count_request&action=estadisticas" class="action-card-corp" data-aos="zoom-in" data-aos-delay="600">
-
-                    </a>
-                </div>
             </div>
         </div>
     </div>
