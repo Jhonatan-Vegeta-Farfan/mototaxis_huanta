@@ -353,9 +353,7 @@ if (empty($controller)) {
 
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <a href="index.php?controller=count_request&action=estadisticas" class="action-card-corp" data-aos="zoom-in" data-aos-delay="600">
-                        <div class="action-icon-corp">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
+
 
                         <div class="action-arrow-corp">
                             <i class="fas fa-chevron-right"></i>
