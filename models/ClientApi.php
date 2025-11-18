@@ -19,7 +19,7 @@ class ClientApi {
      * Leer todos los clientes API activos
      */
     public function read() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id DESC";
+        $query = "SELECT * FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -62,7 +62,7 @@ class ClientApi {
     public function search($keywords) {
         $query = "SELECT * FROM " . $this->table_name . " 
                  WHERE (ruc LIKE ? OR razon_social LIKE ?) AND estado = 1
-                 ORDER BY id DESC";
+                 ORDER BY id ASC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -99,7 +99,7 @@ class ClientApi {
             $query .= " AND estado = 1";
         }
         
-        $query .= " ORDER BY id DESC";
+        $query .= " ORDER BY id ASC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -176,17 +176,79 @@ class ClientApi {
     }
 
     /**
-     * Eliminar cliente API (eliminación lógica)
+     * Eliminar cliente API (eliminación lógica) y reorganizar
      */
     public function delete() {
-        $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
+        try {
+            $this->conn->beginTransaction();
+            
+            // 1. Verificar si el cliente tiene tokens activos
+            $tokenModel = new TokenApi($this->conn);
+            $tokensActivos = $tokenModel->getByClient($this->id);
+            
+            if ($tokensActivos->rowCount() > 0) {
+                throw new Exception('No se puede eliminar el cliente porque tiene tokens activos asociados');
+            }
+            
+            // 2. Eliminar lógicamente el cliente
+            $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error al eliminar el cliente");
+            }
+            
+            // 3. Reorganizar IDs de clientes activos
+            $this->reorganizarClientesActivos();
+            
+            $this->conn->commit();
             return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error en delete: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
-        return false;
+    }
+
+    /**
+     * Reorganizar IDs de clientes activos
+     */
+    private function reorganizarClientesActivos() {
+        try {
+            // 1. Obtener todos los clientes activos ordenados por ID actual
+            $query = "SELECT id FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Actualizar IDs secuencialmente
+            $new_id = 1;
+            foreach ($clientes as $cliente) {
+                if ($cliente['id'] != $new_id) {
+                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
+                    $update_stmt = $this->conn->prepare($update_query);
+                    $update_stmt->bindParam(1, $new_id);
+                    $update_stmt->bindParam(2, $cliente['id']);
+                    $update_stmt->execute();
+                    
+                    // Actualizar también en tokens_api
+                    $update_tokens = "UPDATE tokens_api SET id_client_api = ? WHERE id_client_api = ?";
+                    $update_tokens_stmt = $this->conn->prepare($update_tokens);
+                    $update_tokens_stmt->bindParam(1, $new_id);
+                    $update_tokens_stmt->bindParam(2, $cliente['id']);
+                    $update_tokens_stmt->execute();
+                }
+                $new_id++;
+            }
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error reorganizando clientes: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -198,6 +260,8 @@ class ClientApi {
         $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
+            // Reorganizar después de activar
+            $this->reorganizarClientesActivos();
             return true;
         }
         return false;
@@ -309,6 +373,13 @@ class ClientApi {
         $stmt->execute();
         
         return $stmt;
+    }
+
+    /**
+     * Reorganizar todos los IDs de clientes (método público para llamadas manuales)
+     */
+    public function reorganizarTodosLosIds() {
+        return $this->reorganizarClientesActivos();
     }
 }
 ?>

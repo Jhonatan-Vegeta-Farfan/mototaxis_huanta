@@ -19,7 +19,7 @@ class Empresa {
     }
 
     public function read() {
-        $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
+        $query = "SELECT * FROM " . $this->table_name . " ORDER BY id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -28,7 +28,7 @@ class Empresa {
     public function search($keywords) {
         $query = "SELECT * FROM " . $this->table_name . " 
                  WHERE ruc LIKE ? OR razon_social LIKE ? OR representante_legal LIKE ?
-                 ORDER BY id DESC";
+                 ORDER BY id ASC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -61,7 +61,7 @@ class Empresa {
             $params[] = "%{$representante_legal}%";
         }
         
-        $query .= " ORDER BY id DESC";
+        $query .= " ORDER BY id ASC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -90,6 +90,10 @@ class Empresa {
         
         if($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
+            
+            // Reorganizar IDs después de crear
+            $this->reorganizarEmpresas();
+            
             return true;
         }
         return false;
@@ -119,15 +123,86 @@ class Empresa {
         return false;
     }
 
+    /**
+     * Eliminar empresa y reorganizar IDs
+     */
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
+        try {
+            $this->conn->beginTransaction();
+            
+            // Verificar si la empresa tiene mototaxis asociados
+            $query = "SELECT COUNT(*) as total FROM mototaxis WHERE id_empresa = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result['total'] > 0) {
+                throw new Exception('No se puede eliminar la empresa porque tiene mototaxis asociados');
+            }
+            
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error al eliminar la empresa");
+            }
+            
+            // Reorganizar IDs
+            $this->reorganizarEmpresas();
+            
+            $this->conn->commit();
             return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error en delete: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
-        return false;
+    }
+
+    /**
+     * Reorganizar IDs de empresas
+     */
+    private function reorganizarEmpresas() {
+        try {
+            // 1. Obtener todas las empresas ordenadas por ID actual
+            $query = "SELECT id FROM " . $this->table_name . " ORDER BY id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Actualizar IDs secuencialmente
+            $new_id = 1;
+            foreach ($empresas as $empresa) {
+                if ($empresa['id'] != $new_id) {
+                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
+                    $update_stmt = $this->conn->prepare($update_query);
+                    $update_stmt->bindParam(1, $new_id);
+                    $update_stmt->bindParam(2, $empresa['id']);
+                    $update_stmt->execute();
+                    
+                    // Actualizar también en mototaxis
+                    $update_mototaxis = "UPDATE mototaxis SET id_empresa = ? WHERE id_empresa = ?";
+                    $update_mototaxis_stmt = $this->conn->prepare($update_mototaxis);
+                    $update_mototaxis_stmt->bindParam(1, $new_id);
+                    $update_mototaxis_stmt->bindParam(2, $empresa['id']);
+                    $update_mototaxis_stmt->execute();
+                }
+                $new_id++;
+            }
+            
+            // 3. Resetear el auto_increment
+            $reset_query = "ALTER TABLE " . $this->table_name . " AUTO_INCREMENT = 1";
+            $this->conn->exec($reset_query);
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error reorganizando empresas: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function readOne() {
@@ -231,6 +306,13 @@ class Empresa {
         $stmt->execute();
         
         return $stmt;
+    }
+
+    /**
+     * Reorganizar todos los IDs de empresas (método público para llamadas manuales)
+     */
+    public function reorganizarTodosLosIds() {
+        return $this->reorganizarEmpresas();
     }
 }
 ?>

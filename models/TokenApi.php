@@ -20,7 +20,7 @@ class TokenApi {
         $query = "SELECT t.*, c.razon_social, c.ruc, c.estado as cliente_estado
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 ORDER BY t.id DESC";
+                 ORDER BY t.id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -34,7 +34,7 @@ class TokenApi {
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ? AND t.estado = 1
-                 ORDER BY t.id DESC";
+                 ORDER BY t.id ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $client_id);
@@ -43,7 +43,7 @@ class TokenApi {
     }
 
     /**
-     * Obtener token por valor - MEJORADO CON MANEJO DE ERRORES
+     * Obtener token por valor
      */
     public function getByToken($token) {
         try {
@@ -62,7 +62,7 @@ class TokenApi {
                 if ($tokenData['estado'] == 1 && $tokenData['cliente_estado'] == 1) {
                     return $tokenData;
                 }
-                return null; // Token o cliente inactivo
+                return null;
             }
             return null;
         } catch (PDOException $e) {
@@ -124,7 +124,7 @@ class TokenApi {
             $tokenCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'] + 1;
             
             // Generar token base aleatorio seguro
-            $base_token = bin2hex(random_bytes(24)); // 48 caracteres hexadecimales más seguro
+            $base_token = bin2hex(random_bytes(24));
             
             // Crear identificador del cliente (primeras 3 letras de razón social)
             $client_identifier = substr($client['razon_social'], 0, 3);
@@ -157,7 +157,7 @@ class TokenApi {
 
         // Generar token automáticamente
         $this->token = $this->generateToken($this->id_client_api);
-        $this->fecha_registro = date('Y-m-d H:i:s'); // Fecha y hora actual
+        $this->fecha_registro = date('Y-m-d H:i:s');
         
         if (!$this->token) {
             throw new Exception("Error generando el token");
@@ -180,6 +180,11 @@ class TokenApi {
         $stmt->bindParam(":estado", $this->estado);
         
         if($stmt->execute()) {
+            $this->id = $this->conn->lastInsertId();
+            
+            // Reorganizar IDs después de crear
+            $this->reorganizarTokens();
+            
             return true;
         }
         return false;
@@ -215,17 +220,82 @@ class TokenApi {
     }
 
     /**
-     * Eliminar token (eliminación lógica)
+     * Eliminar token (eliminación lógica) y reorganizar
      */
     public function delete() {
-        $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
+        try {
+            $this->conn->beginTransaction();
+            
+            // Verificar si el token tiene requests asociados
+            $query = "SELECT COUNT(*) as total FROM count_request WHERE id_token_api = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            $stmt->execute();
+            $requests_count = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            if ($requests_count > 0) {
+                throw new Exception("No se puede eliminar el token porque tiene requests asociados");
+            }
+            
+            // Eliminar lógicamente el token
+            $query = "UPDATE " . $this->table_name . " SET estado = 0 WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error al eliminar el token");
+            }
+            
+            // Reorganizar IDs de tokens activos
+            $this->reorganizarTokens();
+            
+            $this->conn->commit();
             return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error en delete: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
-        return false;
+    }
+
+    /**
+     * Reorganizar IDs de tokens activos
+     */
+    private function reorganizarTokens() {
+        try {
+            // 1. Obtener todos los tokens activos ordenados por ID actual
+            $query = "SELECT id FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $tokens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Actualizar IDs secuencialmente
+            $new_id = 1;
+            foreach ($tokens as $token) {
+                if ($token['id'] != $new_id) {
+                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
+                    $update_stmt = $this->conn->prepare($update_query);
+                    $update_stmt->bindParam(1, $new_id);
+                    $update_stmt->bindParam(2, $token['id']);
+                    $update_stmt->execute();
+                    
+                    // Actualizar también en count_request
+                    $update_requests = "UPDATE count_request SET id_token_api = ? WHERE id_token_api = ?";
+                    $update_requests_stmt = $this->conn->prepare($update_requests);
+                    $update_requests_stmt->bindParam(1, $new_id);
+                    $update_requests_stmt->bindParam(2, $token['id']);
+                    $update_requests_stmt->execute();
+                }
+                $new_id++;
+            }
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error reorganizando tokens: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -237,6 +307,8 @@ class TokenApi {
         $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
+            // Reorganizar después de activar
+            $this->reorganizarTokens();
             return true;
         }
         return false;
@@ -302,6 +374,13 @@ class TokenApi {
             'message' => '✅ Token válido y activo',
             'data' => $tokenData
         ];
+    }
+
+    /**
+     * Reorganizar todos los IDs de tokens (método público para llamadas manuales)
+     */
+    public function reorganizarTodosLosIds() {
+        return $this->reorganizarTokens();
     }
 }
 ?>

@@ -20,7 +20,7 @@ class CountRequest {
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 ORDER BY cr.id DESC";
+                 ORDER BY cr.id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -32,7 +32,7 @@ class CountRequest {
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ?
-                 ORDER BY cr.id DESC";
+                 ORDER BY cr.id ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $client_id);
@@ -46,7 +46,7 @@ class CountRequest {
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE cr.id_token_api = ?
-                 ORDER BY cr.id DESC";
+                 ORDER BY cr.id ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $token_id);
@@ -73,7 +73,7 @@ class CountRequest {
             $params[] = $fecha_fin;
         }
         
-        $query .= " ORDER BY cr.id DESC";
+        $query .= " ORDER BY cr.id ASC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -108,6 +108,10 @@ class CountRequest {
         
         if($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
+            
+            // Reorganizar IDs después de crear
+            $this->reorganizarRequests();
+            
             return true;
         }
         return false;
@@ -143,15 +147,68 @@ class CountRequest {
         return false;
     }
 
+    /**
+     * Eliminar request y reorganizar IDs
+     */
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
+        try {
+            $this->conn->beginTransaction();
+            
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error al eliminar el request");
+            }
+            
+            // Reorganizar IDs
+            $this->reorganizarRequests();
+            
+            $this->conn->commit();
             return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error en delete: " . $e->getMessage());
+            return false;
         }
-        return false;
+    }
+
+    /**
+     * Reorganizar IDs de requests
+     */
+    private function reorganizarRequests() {
+        try {
+            // 1. Obtener todos los requests ordenados por ID actual
+            $query = "SELECT id FROM " . $this->table_name . " ORDER BY id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Actualizar IDs secuencialmente
+            $new_id = 1;
+            foreach ($requests as $request) {
+                if ($request['id'] != $new_id) {
+                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
+                    $update_stmt = $this->conn->prepare($update_query);
+                    $update_stmt->bindParam(1, $new_id);
+                    $update_stmt->bindParam(2, $request['id']);
+                    $update_stmt->execute();
+                }
+                $new_id++;
+            }
+            
+            // 3. Resetear el auto_increment
+            $reset_query = "ALTER TABLE " . $this->table_name . " AUTO_INCREMENT = 1";
+            $this->conn->exec($reset_query);
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error reorganizando requests: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function readOne() {
@@ -286,7 +343,12 @@ class CountRequest {
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $dias, PDO::PARAM_INT);
         
-        return $stmt->execute();
+        if($stmt->execute()) {
+            // Reorganizar después de limpiar
+            $this->reorganizarRequests();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -301,6 +363,13 @@ class CountRequest {
         $this->endpoint = $endpoint ?? ($_SERVER['REQUEST_URI'] ?? 'Desconocido');
         
         return $this->create();
+    }
+
+    /**
+     * Reorganizar todos los IDs de requests (método público para llamadas manuales)
+     */
+    public function reorganizarTodosLosIds() {
+        return $this->reorganizarRequests();
     }
 }
 ?>

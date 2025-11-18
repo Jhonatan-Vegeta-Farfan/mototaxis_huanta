@@ -31,23 +31,22 @@ class Mototaxi {
         $query = "SELECT m.*, e.razon_social as empresa 
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
-                 ORDER BY m.id DESC";
+                 ORDER BY m.id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
 
-    // MÉTODO DE BÚSQUEDA AGREGADO
+    // MÉTODO DE BÚSQUEDA
     public function search($keywords) {
         $query = "SELECT m.*, e.razon_social as empresa 
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
                  WHERE m.numero_asignado LIKE ? OR m.nombre_completo LIKE ? OR m.dni LIKE ? OR m.placa_rodaje LIKE ?
-                 ORDER BY m.id DESC";
+                 ORDER BY m.id ASC";
         
         $stmt = $this->conn->prepare($query);
         
-        // Agregar comodines para la búsqueda
         $keywords = "%{$keywords}%";
         $stmt->bindParam(1, $keywords);
         $stmt->bindParam(2, $keywords);
@@ -87,11 +86,10 @@ class Mototaxi {
             $params[] = "%{$placa_rodaje}%";
         }
         
-        $query .= " ORDER BY m.id DESC";
+        $query .= " ORDER BY m.id ASC";
         
         $stmt = $this->conn->prepare($query);
         
-        // Bind parameters dinámicamente
         foreach ($params as $key => $value) {
             $stmt->bindValue(($key + 1), $value);
         }
@@ -106,7 +104,7 @@ class Mototaxi {
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
                  WHERE m.id_empresa = ?
-                 ORDER BY m.id DESC";
+                 ORDER BY m.id ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $empresa_id);
@@ -155,6 +153,10 @@ class Mototaxi {
         
         if($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
+            
+            // Reorganizar IDs después de crear
+            $this->reorganizarMototaxis();
+            
             return true;
         }
         return false;
@@ -208,15 +210,68 @@ class Mototaxi {
         return false;
     }
 
+    /**
+     * Eliminar mototaxi y reorganizar IDs
+     */
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
+        try {
+            $this->conn->beginTransaction();
+            
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error al eliminar el mototaxi");
+            }
+            
+            // Reorganizar IDs
+            $this->reorganizarMototaxis();
+            
+            $this->conn->commit();
             return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error en delete: " . $e->getMessage());
+            return false;
         }
-        return false;
+    }
+
+    /**
+     * Reorganizar IDs de mototaxis
+     */
+    private function reorganizarMototaxis() {
+        try {
+            // 1. Obtener todos los mototaxis ordenados por ID actual
+            $query = "SELECT id FROM " . $this->table_name . " ORDER BY id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $mototaxis = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Actualizar IDs secuencialmente
+            $new_id = 1;
+            foreach ($mototaxis as $mototaxi) {
+                if ($mototaxi['id'] != $new_id) {
+                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
+                    $update_stmt = $this->conn->prepare($update_query);
+                    $update_stmt->bindParam(1, $new_id);
+                    $update_stmt->bindParam(2, $mototaxi['id']);
+                    $update_stmt->execute();
+                }
+                $new_id++;
+            }
+            
+            // 3. Resetear el auto_increment
+            $reset_query = "ALTER TABLE " . $this->table_name . " AUTO_INCREMENT = 1";
+            $this->conn->exec($reset_query);
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error reorganizando mototaxis: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function readOne() {
@@ -342,6 +397,13 @@ class Mototaxi {
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Reorganizar todos los IDs de mototaxis (método público para llamadas manuales)
+     */
+    public function reorganizarTodosLosIds() {
+        return $this->reorganizarMototaxis();
     }
 }
 ?>
