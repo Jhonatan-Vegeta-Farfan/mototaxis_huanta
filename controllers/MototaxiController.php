@@ -74,7 +74,7 @@ class MototaxiController {
             } else {
                 // Verificar si el número asignado ya existe
                 $query = "SELECT id FROM mototaxis WHERE numero_asignado = ?";
-                $stmt = $this->model->conn->prepare($query);
+                $stmt = $this->model->getConnection()->prepare($query);
                 $stmt->bindParam(1, $this->model->numero_asignado);
                 $stmt->execute();
                 
@@ -83,7 +83,7 @@ class MototaxiController {
                 } else {
                     // Verificar si el DNI ya existe
                     $query = "SELECT id FROM mototaxis WHERE dni = ?";
-                    $stmt = $this->model->conn->prepare($query);
+                    $stmt = $this->model->getConnection()->prepare($query);
                     $stmt->bindParam(1, $this->model->dni);
                     $stmt->execute();
                     
@@ -145,7 +145,7 @@ class MototaxiController {
             } else {
                 // Verificar si el número asignado ya existe (excluyendo el actual)
                 $query = "SELECT id FROM mototaxis WHERE numero_asignado = ? AND id != ?";
-                $stmt = $this->model->conn->prepare($query);
+                $stmt = $this->model->getConnection()->prepare($query);
                 $stmt->bindParam(1, $this->model->numero_asignado);
                 $stmt->bindParam(2, $this->model->id);
                 $stmt->execute();
@@ -155,7 +155,7 @@ class MototaxiController {
                 } else {
                     // Verificar si el DNI ya existe (excluyendo el actual)
                     $query = "SELECT id FROM mototaxis WHERE dni = ? AND id != ?";
-                    $stmt = $this->model->conn->prepare($query);
+                    $stmt = $this->model->getConnection()->prepare($query);
                     $stmt->bindParam(1, $this->model->dni);
                     $stmt->bindParam(2, $this->model->id);
                     $stmt->execute();
@@ -294,7 +294,7 @@ class MototaxiController {
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
                  GROUP BY e.id, e.razon_social 
                  ORDER BY total DESC";
-        $stmt = $this->model->conn->prepare($query);
+        $stmt = $this->model->getConnection()->prepare($query);
         if ($stmt) {
             $stmt->execute();
             $stats['por_empresa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -306,7 +306,7 @@ class MototaxiController {
                  WHERE anio_fabricacion IS NOT NULL 
                  GROUP BY anio_fabricacion 
                  ORDER BY anio_fabricacion DESC";
-        $stmt = $this->model->conn->prepare($query);
+        $stmt = $this->model->getConnection()->prepare($query);
         if ($stmt) {
             $stmt->execute();
             $stats['por_año'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -318,7 +318,7 @@ class MototaxiController {
                  WHERE marca IS NOT NULL AND marca != '' 
                  GROUP BY marca 
                  ORDER BY total DESC";
-        $stmt = $this->model->conn->prepare($query);
+        $stmt = $this->model->getConnection()->prepare($query);
         if ($stmt) {
             $stmt->execute();
             $stats['por_marca'] = $stmt->fetchAll(PDO::FETCH_ASSOC);

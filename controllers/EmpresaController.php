@@ -52,7 +52,7 @@ class EmpresaController {
             } else {
                 // Verificar si el RUC ya existe
                 $query = "SELECT id FROM empresas WHERE ruc = ?";
-                $stmt = $this->model->conn->prepare($query);
+                $stmt = $this->model->getConnection()->prepare($query);
                 $stmt->bindParam(1, $this->model->ruc);
                 $stmt->execute();
                 
@@ -96,7 +96,7 @@ class EmpresaController {
             } else {
                 // Verificar si el RUC ya existe (excluyendo el actual)
                 $query = "SELECT id FROM empresas WHERE ruc = ? AND id != ?";
-                $stmt = $this->model->conn->prepare($query);
+                $stmt = $this->model->getConnection()->prepare($query);
                 $stmt->bindParam(1, $this->model->ruc);
                 $stmt->bindParam(2, $this->model->id);
                 $stmt->execute();
@@ -129,7 +129,7 @@ class EmpresaController {
         
         // Verificar si la empresa tiene mototaxis asociados
         $query = "SELECT COUNT(*) as total FROM mototaxis WHERE id_empresa = ?";
-        $stmt = $this->model->conn->prepare($query);
+        $stmt = $this->model->getConnection()->prepare($query);
         $stmt->bindParam(1, $this->model->id);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -155,7 +155,7 @@ class EmpresaController {
         
         if($this->model->readOne()) {
             // Obtener mototaxis de la empresa
-            $mototaxiModel = new Mototaxi($this->model->conn);
+            $mototaxiModel = new Mototaxi($this->model->getConnection());
             $mototaxis = $mototaxiModel->getByEmpresa($this->model->id);
             
             include_once 'views/empresas/view.php';
@@ -184,7 +184,7 @@ class EmpresaController {
         $this->model->id = intval($_GET['id']);
         
         if ($this->model->readOne()) {
-            $mototaxiModel = new Mototaxi($this->model->conn);
+            $mototaxiModel = new Mototaxi($this->model->getConnection());
             
             // Obtener estadísticas
             $stats = [

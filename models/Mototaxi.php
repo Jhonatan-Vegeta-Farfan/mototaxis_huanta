@@ -22,6 +22,10 @@ class Mototaxi {
         $this->conn = $db;
     }
 
+    // Método para obtener la conexión
+    public function getConnection() {
+        return $this->conn;
+    }
 
     public function read() {
         $query = "SELECT m.*, e.razon_social as empresa 
@@ -305,7 +309,6 @@ class Mototaxi {
             return null;
         }
     }
-
 
     /**
      * Buscar mototaxi por número exacto para API

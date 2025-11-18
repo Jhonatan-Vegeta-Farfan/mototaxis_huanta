@@ -13,6 +13,11 @@ class Empresa {
         $this->conn = $db;
     }
 
+    // Método para obtener la conexión
+    public function getConnection() {
+        return $this->conn;
+    }
+
     public function read() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
         $stmt = $this->conn->prepare($query);
