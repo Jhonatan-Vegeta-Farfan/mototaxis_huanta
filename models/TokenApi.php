@@ -67,6 +67,7 @@ class TokenApi {
             return null;
         } catch (PDOException $e) {
             error_log("Error en getByToken: " . $e->getMessage());
+            $this->logNotification('ERROR_BUSQUEDA_TOKEN', "Error al buscar token: $token - " . $e->getMessage());
             return null;
         }
     }
@@ -99,6 +100,7 @@ class TokenApi {
             return false;
         } catch (PDOException $e) {
             error_log("Error en readOne: " . $e->getMessage());
+            $this->logNotification('ERROR_LECTURA_TOKEN', "Error al leer token ID: {$this->id} - " . $e->getMessage());
             return false;
         }
     }
@@ -146,77 +148,116 @@ class TokenApi {
      * Crear nuevo token automáticamente
      */
     public function create() {
-        // Validar que el cliente existe y está activo
-        $query = "SELECT id FROM client_api WHERE id = ? AND estado = 1 LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id_client_api);
-        
-        if (!$stmt->execute() || $stmt->rowCount() === 0) {
-            throw new Exception("Cliente no existe o está inactivo");
-        }
-
-        // Generar token automáticamente
-        $this->token = $this->generateToken($this->id_client_api);
-        $this->fecha_registro = date('Y-m-d H:i:s');
-        
-        if (!$this->token) {
-            throw new Exception("Error generando el token");
-        }
-
-        $query = "INSERT INTO " . $this->table_name . " 
-                 SET id_client_api=:id_client_api, token=:token, 
-                     fecha_registro=:fecha_registro, estado=:estado";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $this->id_client_api = htmlspecialchars(strip_tags($this->id_client_api));
-        $this->token = htmlspecialchars(strip_tags($this->token));
-        $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
-        $this->estado = htmlspecialchars(strip_tags($this->estado));
-        
-        $stmt->bindParam(":id_client_api", $this->id_client_api);
-        $stmt->bindParam(":token", $this->token);
-        $stmt->bindParam(":fecha_registro", $this->fecha_registro);
-        $stmt->bindParam(":estado", $this->estado);
-        
-        if($stmt->execute()) {
-            $this->id = $this->conn->lastInsertId();
+        try {
+            $this->conn->beginTransaction();
             
-            // Reorganizar IDs después de crear
-            $this->reorganizarTokens();
+            // Validar que el cliente existe y está activo
+            $query = "SELECT razon_social, ruc FROM client_api WHERE id = ? AND estado = 1 LIMIT 0,1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id_client_api);
             
-            return true;
+            if (!$stmt->execute() || $stmt->rowCount() === 0) {
+                throw new Exception("Cliente no existe o está inactivo");
+            }
+            
+            $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Generar token automáticamente
+            $this->token = $this->generateToken($this->id_client_api);
+            $this->fecha_registro = date('Y-m-d H:i:s');
+            
+            if (!$this->token) {
+                throw new Exception("Error generando el token");
+            }
+
+            $query = "INSERT INTO " . $this->table_name . " 
+                     SET id_client_api=:id_client_api, token=:token, 
+                         fecha_registro=:fecha_registro, estado=:estado";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $this->id_client_api = htmlspecialchars(strip_tags($this->id_client_api));
+            $this->token = htmlspecialchars(strip_tags($this->token));
+            $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
+            $this->estado = htmlspecialchars(strip_tags($this->estado));
+            
+            $stmt->bindParam(":id_client_api", $this->id_client_api);
+            $stmt->bindParam(":token", $this->token);
+            $stmt->bindParam(":fecha_registro", $this->fecha_registro);
+            $stmt->bindParam(":estado", $this->estado);
+            
+            if($stmt->execute()) {
+                $this->id = $this->conn->lastInsertId();
+                
+                // Reorganizar IDs después de crear
+                $this->reorganizarTokens();
+                
+                // Registrar notificación
+                $detalles = json_encode([
+                    'token_id' => $this->id,
+                    'cliente_id' => $this->id_client_api,
+                    'cliente' => $cliente['razon_social'],
+                    'token_generado' => substr($this->token, 0, 20) . '...', // Mostrar solo parte del token por seguridad
+                    'fecha_registro' => $this->fecha_registro
+                ]);
+                
+                $this->logNotification('TOKEN_CREADO', "Nuevo token creado para: {$cliente['razon_social']}", null, $detalles);
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al ejecutar la inserción");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_CREACION_TOKEN', "Error al crear token: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
-        return false;
     }
 
     /**
      * Actualizar token existente
      */
     public function update() {
-        $query = "UPDATE " . $this->table_name . " 
-                 SET id_client_api=:id_client_api, token=:token, 
-                     fecha_registro=:fecha_registro, estado=:estado
-                 WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $this->id_client_api = htmlspecialchars(strip_tags($this->id_client_api));
-        $this->token = htmlspecialchars(strip_tags($this->token));
-        $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
-        $this->estado = htmlspecialchars(strip_tags($this->estado));
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        
-        $stmt->bindParam(":id_client_api", $this->id_client_api);
-        $stmt->bindParam(":token", $this->token);
-        $stmt->bindParam(":fecha_registro", $this->fecha_registro);
-        $stmt->bindParam(":estado", $this->estado);
-        $stmt->bindParam(":id", $this->id);
-        
-        if($stmt->execute()) {
-            return true;
+        try {
+            $this->conn->beginTransaction();
+            
+            // Obtener datos antiguos
+            $old_data = $this->getOldData();
+            
+            $query = "UPDATE " . $this->table_name . " 
+                     SET id_client_api=:id_client_api, token=:token, 
+                         fecha_registro=:fecha_registro, estado=:estado
+                     WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $this->id_client_api = htmlspecialchars(strip_tags($this->id_client_api));
+            $this->token = htmlspecialchars(strip_tags($this->token));
+            $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
+            $this->estado = htmlspecialchars(strip_tags($this->estado));
+            $this->id = htmlspecialchars(strip_tags($this->id));
+            
+            $stmt->bindParam(":id_client_api", $this->id_client_api);
+            $stmt->bindParam(":token", $this->token);
+            $stmt->bindParam(":fecha_registro", $this->fecha_registro);
+            $stmt->bindParam(":estado", $this->estado);
+            $stmt->bindParam(":id", $this->id);
+            
+            if($stmt->execute()) {
+                // Registrar cambios
+                $this->logTokenChanges($old_data);
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al ejecutar la actualización");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_ACTUALIZACION_TOKEN', "Error al actualizar token ID: {$this->id} - " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
@@ -226,6 +267,9 @@ class TokenApi {
         try {
             $this->conn->beginTransaction();
             
+            // Obtener datos del token antes de eliminar
+            $token_data = $this->getTokenData();
+
             // Verificar si el token tiene requests asociados
             $query = "SELECT COUNT(*) as total FROM count_request WHERE id_token_api = ?";
             $stmt = $this->conn->prepare($query);
@@ -234,7 +278,7 @@ class TokenApi {
             $requests_count = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             if ($requests_count > 0) {
-                throw new Exception("No se puede eliminar el token porque tiene requests asociados");
+                throw new Exception("No se puede eliminar el token porque tiene $requests_count requests asociados");
             }
             
             // Eliminar lógicamente el token
@@ -247,14 +291,24 @@ class TokenApi {
             }
             
             // Reorganizar IDs de tokens activos
-            $this->reorganizarTokens();
+            $reorganizados = $this->reorganizarTokens();
+            
+            // Registrar notificación
+            $detalles = json_encode([
+                'token_id' => $this->id,
+                'cliente' => $token_data['razon_social'],
+                'requests_afectados' => $requests_count,
+                'ids_reorganizados' => $reorganizados
+            ]);
+            
+            $this->logNotification('TOKEN_ELIMINADO', "Token eliminado para: {$token_data['razon_social']}", null, $detalles);
             
             $this->conn->commit();
             return true;
             
         } catch (Exception $e) {
             $this->conn->rollBack();
-            error_log("Error en delete: " . $e->getMessage());
+            $this->logNotification('ERROR_ELIMINACION_TOKEN', "Error al eliminar token ID: {$this->id} - " . $e->getMessage());
             throw new Exception($e->getMessage());
         }
     }
@@ -269,6 +323,8 @@ class TokenApi {
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             $tokens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $cambios = [];
             
             // 2. Actualizar IDs secuencialmente
             $new_id = 1;
@@ -286,15 +342,25 @@ class TokenApi {
                     $update_requests_stmt->bindParam(1, $new_id);
                     $update_requests_stmt->bindParam(2, $token['id']);
                     $update_requests_stmt->execute();
+                    
+                    $cambios[] = [
+                        'viejo_id' => $token['id'],
+                        'nuevo_id' => $new_id
+                    ];
                 }
                 $new_id++;
             }
             
-            return true;
+            if (!empty($cambios)) {
+                $this->logNotification('REORGANIZACION_TOKENS', "IDs de tokens reorganizados. Total cambios: " . count($cambios), null, json_encode($cambios));
+            }
+            
+            return $cambios;
             
         } catch (PDOException $e) {
             error_log("Error reorganizando tokens: " . $e->getMessage());
-            return false;
+            $this->logNotification('ERROR_REORGANIZACION_TOKENS', "Error al reorganizar tokens: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -302,16 +368,33 @@ class TokenApi {
      * Activar token
      */
     public function activate() {
-        $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
-            // Reorganizar después de activar
-            $this->reorganizarTokens();
-            return true;
+        try {
+            $this->conn->beginTransaction();
+            
+            $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if($stmt->execute()) {
+                // Obtener datos del token
+                $token_data = $this->getTokenData();
+                
+                // Reorganizar después de activar
+                $this->reorganizarTokens();
+                
+                // Registrar notificación
+                $this->logNotification('TOKEN_ACTIVADO', "Token activado para: {$token_data['razon_social']}");
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al activar el token");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_ACTIVACION_TOKEN', "Error al activar token ID: {$this->id} - " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
@@ -349,6 +432,7 @@ class TokenApi {
         $tokenData = $this->getByToken($token);
         
         if (!$tokenData) {
+            $this->logNotification('VALIDACION_TOKEN_FALLIDA', "Intento de validación fallido - Token no existe: " . substr($token, 0, 20) . '...');
             return [
                 'valid' => false,
                 'message' => '❌ Token no existe o es inválido'
@@ -356,6 +440,7 @@ class TokenApi {
         }
         
         if ($tokenData['estado'] == 0) {
+            $this->logNotification('VALIDACION_TOKEN_FALLIDA', "Token inactivo: " . substr($token, 0, 20) . '...');
             return [
                 'valid' => false,
                 'message' => '❌ Token inactivo'
@@ -363,12 +448,14 @@ class TokenApi {
         }
         
         if ($tokenData['cliente_estado'] == 0) {
+            $this->logNotification('VALIDACION_TOKEN_FALLIDA', "Cliente inactivo para token: " . substr($token, 0, 20) . '...');
             return [
                 'valid' => false,
                 'message' => '❌ Cliente inactivo'
             ];
         }
         
+        $this->logNotification('VALIDACION_TOKEN_EXITOSA', "Token validado exitosamente para: {$tokenData['razon_social']}");
         return [
             'valid' => true,
             'message' => '✅ Token válido y activo',
@@ -380,7 +467,86 @@ class TokenApi {
      * Reorganizar todos los IDs de tokens (método público para llamadas manuales)
      */
     public function reorganizarTodosLosIds() {
-        return $this->reorganizarTokens();
+        $result = $this->reorganizarTokens();
+        $this->logNotification('REORGANIZACION_MANUAL_TOKENS', "Reorganización manual de IDs de tokens completada", null, json_encode($result));
+        return $result;
+    }
+
+    /**
+     * Obtener datos antiguos del token
+     */
+    private function getOldData() {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener datos del token con información del cliente
+     */
+    private function getTokenData() {
+        $query = "SELECT t.*, c.razon_social 
+                 FROM " . $this->table_name . " t 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE t.id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Registrar cambios en las actualizaciones de tokens
+     */
+    private function logTokenChanges($old_data) {
+        $changes = [];
+        
+        if ($old_data['id_client_api'] != $this->id_client_api) {
+            // Obtener nombres de clientes
+            $cliente_old = $this->getClienteName($old_data['id_client_api']);
+            $cliente_new = $this->getClienteName($this->id_client_api);
+            $changes[] = "Cliente: $cliente_old → $cliente_new";
+        }
+        if ($old_data['token'] != $this->token) {
+            $changes[] = "Token actualizado (se generó uno nuevo)";
+        }
+        if ($old_data['estado'] != $this->estado) {
+            $estado_old = $old_data['estado'] == 1 ? 'Activo' : 'Inactivo';
+            $estado_new = $this->estado == 1 ? 'Activo' : 'Inactivo';
+            $changes[] = "Estado: $estado_old → $estado_new";
+        }
+        
+        if (!empty($changes)) {
+            $detalles = json_encode([
+                'token_id' => $this->id,
+                'cambios' => $changes,
+                'fecha_actualizacion' => date('Y-m-d H:i:s')
+            ]);
+            
+            $this->logNotification('TOKEN_ACTUALIZADO', "Token actualizado. Cambios: " . count($changes), null, $detalles);
+        }
+    }
+
+    /**
+     * Obtener nombre del cliente
+     */
+    private function getClienteName($cliente_id) {
+        $query = "SELECT razon_social FROM client_api WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $cliente_id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['razon_social'] : 'Desconocido';
+    }
+
+    /**
+     * Registrar notificación
+     */
+    private function logNotification($tipo, $mensaje, $usuario_id = null, $detalles = null) {
+        $database = new Database();
+        $database->logNotification($tipo, $mensaje, $usuario_id, $detalles);
     }
 }
 ?>

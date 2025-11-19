@@ -52,6 +52,7 @@ class ClientApi {
             return false;
         } catch (PDOException $e) {
             error_log("Error en readOne: " . $e->getMessage());
+            $this->logNotification('ERROR_LECTURA', "Error al leer cliente API ID: {$this->id} - " . $e->getMessage());
             return false;
         }
     }
@@ -71,6 +72,8 @@ class ClientApi {
         $stmt->bindParam(2, $keywords);
         
         $stmt->execute();
+        
+        $this->logNotification('BUSQUEDA_CLIENTE', "Búsqueda realizada: '$keywords'. Resultados: " . $stmt->rowCount());
         return $stmt;
     }
 
@@ -81,20 +84,24 @@ class ClientApi {
         $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
         
         $params = array();
+        $criterios = [];
         
         if (!empty($ruc)) {
             $query .= " AND ruc LIKE ?";
             $params[] = "%{$ruc}%";
+            $criterios[] = "RUC: $ruc";
         }
         
         if (!empty($razon_social)) {
             $query .= " AND razon_social LIKE ?";
             $params[] = "%{$razon_social}%";
+            $criterios[] = "Razón Social: $razon_social";
         }
         
         if (!empty($estado)) {
             $query .= " AND estado = ?";
             $params[] = $estado;
+            $criterios[] = "Estado: " . ($estado == 1 ? 'Activo' : 'Inactivo');
         } else {
             $query .= " AND estado = 1";
         }
@@ -108,6 +115,9 @@ class ClientApi {
         }
         
         $stmt->execute();
+        
+        $criterios_str = implode(', ', $criterios);
+        $this->logNotification('BUSQUEDA_AVANZADA_CLIENTE', "Búsqueda avanzada - Criterios: $criterios_str. Resultados: " . $stmt->rowCount());
         return $stmt;
     }
 
@@ -115,64 +125,101 @@ class ClientApi {
      * Crear nuevo cliente API
      */
     public function create() {
-        $query = "INSERT INTO " . $this->table_name . " 
-                 SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
-                     correo=:correo, fecha_registro=:fecha_registro, estado=:estado";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $this->ruc = htmlspecialchars(strip_tags($this->ruc));
-        $this->razon_social = htmlspecialchars(strip_tags($this->razon_social));
-        $this->telefono = htmlspecialchars(strip_tags($this->telefono));
-        $this->correo = htmlspecialchars(strip_tags($this->correo));
-        $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
-        $this->estado = htmlspecialchars(strip_tags($this->estado));
-        
-        $stmt->bindParam(":ruc", $this->ruc);
-        $stmt->bindParam(":razon_social", $this->razon_social);
-        $stmt->bindParam(":telefono", $this->telefono);
-        $stmt->bindParam(":correo", $this->correo);
-        $stmt->bindParam(":fecha_registro", $this->fecha_registro);
-        $stmt->bindParam(":estado", $this->estado);
-        
-        if($stmt->execute()) {
-            $this->id = $this->conn->lastInsertId();
-            return true;
+        try {
+            $this->conn->beginTransaction();
+            
+            $query = "INSERT INTO " . $this->table_name . " 
+                     SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
+                         correo=:correo, fecha_registro=:fecha_registro, estado=:estado";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $this->ruc = htmlspecialchars(strip_tags($this->ruc));
+            $this->razon_social = htmlspecialchars(strip_tags($this->razon_social));
+            $this->telefono = htmlspecialchars(strip_tags($this->telefono));
+            $this->correo = htmlspecialchars(strip_tags($this->correo));
+            $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
+            $this->estado = htmlspecialchars(strip_tags($this->estado));
+            
+            $stmt->bindParam(":ruc", $this->ruc);
+            $stmt->bindParam(":razon_social", $this->razon_social);
+            $stmt->bindParam(":telefono", $this->telefono);
+            $stmt->bindParam(":correo", $this->correo);
+            $stmt->bindParam(":fecha_registro", $this->fecha_registro);
+            $stmt->bindParam(":estado", $this->estado);
+            
+            if($stmt->execute()) {
+                $this->id = $this->conn->lastInsertId();
+                
+                // Registrar notificación de creación
+                $detalles = json_encode([
+                    'cliente_id' => $this->id,
+                    'ruc' => $this->ruc,
+                    'razon_social' => $this->razon_social,
+                    'fecha_registro' => $this->fecha_registro
+                ]);
+                
+                $this->logNotification('CLIENTE_CREADO', "Nuevo cliente API creado: {$this->razon_social} (RUC: {$this->ruc})", null, $detalles);
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al ejecutar la inserción");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_CREACION_CLIENTE', "Error al crear cliente API: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
      * Actualizar cliente API existente
      */
     public function update() {
-        $query = "UPDATE " . $this->table_name . " 
-                 SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
-                     correo=:correo, fecha_registro=:fecha_registro, estado=:estado
-                 WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $this->ruc = htmlspecialchars(strip_tags($this->ruc));
-        $this->razon_social = htmlspecialchars(strip_tags($this->razon_social));
-        $this->telefono = htmlspecialchars(strip_tags($this->telefono));
-        $this->correo = htmlspecialchars(strip_tags($this->correo));
-        $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
-        $this->estado = htmlspecialchars(strip_tags($this->estado));
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        
-        $stmt->bindParam(":ruc", $this->ruc);
-        $stmt->bindParam(":razon_social", $this->razon_social);
-        $stmt->bindParam(":telefono", $this->telefono);
-        $stmt->bindParam(":correo", $this->correo);
-        $stmt->bindParam(":fecha_registro", $this->fecha_registro);
-        $stmt->bindParam(":estado", $this->estado);
-        $stmt->bindParam(":id", $this->id);
-        
-        if($stmt->execute()) {
-            return true;
+        try {
+            $this->conn->beginTransaction();
+            
+            // Obtener datos antiguos para comparación
+            $old_data = $this->getOldData();
+            
+            $query = "UPDATE " . $this->table_name . " 
+                     SET ruc=:ruc, razon_social=:razon_social, telefono=:telefono, 
+                         correo=:correo, fecha_registro=:fecha_registro, estado=:estado
+                     WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $this->ruc = htmlspecialchars(strip_tags($this->ruc));
+            $this->razon_social = htmlspecialchars(strip_tags($this->razon_social));
+            $this->telefono = htmlspecialchars(strip_tags($this->telefono));
+            $this->correo = htmlspecialchars(strip_tags($this->correo));
+            $this->fecha_registro = htmlspecialchars(strip_tags($this->fecha_registro));
+            $this->estado = htmlspecialchars(strip_tags($this->estado));
+            $this->id = htmlspecialchars(strip_tags($this->id));
+            
+            $stmt->bindParam(":ruc", $this->ruc);
+            $stmt->bindParam(":razon_social", $this->razon_social);
+            $stmt->bindParam(":telefono", $this->telefono);
+            $stmt->bindParam(":correo", $this->correo);
+            $stmt->bindParam(":fecha_registro", $this->fecha_registro);
+            $stmt->bindParam(":estado", $this->estado);
+            $stmt->bindParam(":id", $this->id);
+            
+            if($stmt->execute()) {
+                // Registrar cambios
+                $this->logChanges($old_data);
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al ejecutar la actualización");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_ACTUALIZACION_CLIENTE', "Error al actualizar cliente API ID: {$this->id} - " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
@@ -182,12 +229,16 @@ class ClientApi {
         try {
             $this->conn->beginTransaction();
             
+            // Obtener datos antes de eliminar
+            $cliente_data = $this->getClienteData();
+            
             // 1. Verificar si el cliente tiene tokens activos
             $tokenModel = new TokenApi($this->conn);
             $tokensActivos = $tokenModel->getByClient($this->id);
+            $total_tokens = $tokensActivos->rowCount();
             
-            if ($tokensActivos->rowCount() > 0) {
-                throw new Exception('No se puede eliminar el cliente porque tiene tokens activos asociados');
+            if ($total_tokens > 0) {
+                throw new Exception('No se puede eliminar el cliente porque tiene ' . $total_tokens . ' tokens activos asociados');
             }
             
             // 2. Eliminar lógicamente el cliente
@@ -200,14 +251,25 @@ class ClientApi {
             }
             
             // 3. Reorganizar IDs de clientes activos
-            $this->reorganizarClientesActivos();
+            $reorganizados = $this->reorganizarClientesActivos();
+            
+            // 4. Registrar notificación
+            $detalles = json_encode([
+                'cliente_id' => $this->id,
+                'razon_social' => $cliente_data['razon_social'],
+                'ruc' => $cliente_data['ruc'],
+                'tokens_afectados' => $total_tokens,
+                'ids_reorganizados' => $reorganizados
+            ]);
+            
+            $this->logNotification('CLIENTE_ELIMINADO', "Cliente API eliminado: {$cliente_data['razon_social']} (RUC: {$cliente_data['ruc']})", null, $detalles);
             
             $this->conn->commit();
             return true;
             
         } catch (Exception $e) {
             $this->conn->rollBack();
-            error_log("Error en delete: " . $e->getMessage());
+            $this->logNotification('ERROR_ELIMINACION_CLIENTE', "Error al eliminar cliente API ID: {$this->id} - " . $e->getMessage());
             throw new Exception($e->getMessage());
         }
     }
@@ -222,6 +284,8 @@ class ClientApi {
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $cambios = [];
             
             // 2. Actualizar IDs secuencialmente
             $new_id = 1;
@@ -239,15 +303,25 @@ class ClientApi {
                     $update_tokens_stmt->bindParam(1, $new_id);
                     $update_tokens_stmt->bindParam(2, $cliente['id']);
                     $update_tokens_stmt->execute();
+                    
+                    $cambios[] = [
+                        'viejo_id' => $cliente['id'],
+                        'nuevo_id' => $new_id
+                    ];
                 }
                 $new_id++;
             }
             
-            return true;
+            if (!empty($cambios)) {
+                $this->logNotification('REORGANIZACION_CLIENTES', "IDs de clientes reorganizados. Total cambios: " . count($cambios), null, json_encode($cambios));
+            }
+            
+            return $cambios;
             
         } catch (PDOException $e) {
             error_log("Error reorganizando clientes: " . $e->getMessage());
-            return false;
+            $this->logNotification('ERROR_REORGANIZACION_CLIENTES', "Error al reorganizar clientes: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -255,16 +329,33 @@ class ClientApi {
      * Activar cliente API
      */
     public function activate() {
-        $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        
-        if($stmt->execute()) {
-            // Reorganizar después de activar
-            $this->reorganizarClientesActivos();
-            return true;
+        try {
+            $this->conn->beginTransaction();
+            
+            $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $this->id);
+            
+            if($stmt->execute()) {
+                // Obtener datos del cliente
+                $cliente_data = $this->getClienteData();
+                
+                // Reorganizar después de activar
+                $this->reorganizarClientesActivos();
+                
+                // Registrar notificación
+                $this->logNotification('CLIENTE_ACTIVADO', "Cliente API activado: {$cliente_data['razon_social']} (RUC: {$cliente_data['ruc']})");
+                
+                $this->conn->commit();
+                return true;
+            } else {
+                throw new Exception("Error al activar el cliente");
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            $this->logNotification('ERROR_ACTIVACION_CLIENTE', "Error al activar cliente API ID: {$this->id} - " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
@@ -379,7 +470,74 @@ class ClientApi {
      * Reorganizar todos los IDs de clientes (método público para llamadas manuales)
      */
     public function reorganizarTodosLosIds() {
-        return $this->reorganizarClientesActivos();
+        $result = $this->reorganizarClientesActivos();
+        $this->logNotification('REORGANIZACION_MANUAL_CLIENTES', "Reorganización manual de IDs de clientes completada", null, json_encode($result));
+        return $result;
+    }
+
+    /**
+     * Obtener datos antiguos para comparación
+     */
+    private function getOldData() {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener datos del cliente
+     */
+    private function getClienteData() {
+        $query = "SELECT razon_social, ruc FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Registrar cambios en las actualizaciones
+     */
+    private function logChanges($old_data) {
+        $changes = [];
+        
+        if ($old_data['ruc'] != $this->ruc) {
+            $changes[] = "RUC: {$old_data['ruc']} → {$this->ruc}";
+        }
+        if ($old_data['razon_social'] != $this->razon_social) {
+            $changes[] = "Razón Social: {$old_data['razon_social']} → {$this->razon_social}";
+        }
+        if ($old_data['telefono'] != $this->telefono) {
+            $changes[] = "Teléfono: {$old_data['telefono']} → {$this->telefono}";
+        }
+        if ($old_data['correo'] != $this->correo) {
+            $changes[] = "Correo: {$old_data['correo']} → {$this->correo}";
+        }
+        if ($old_data['estado'] != $this->estado) {
+            $estado_old = $old_data['estado'] == 1 ? 'Activo' : 'Inactivo';
+            $estado_new = $this->estado == 1 ? 'Activo' : 'Inactivo';
+            $changes[] = "Estado: $estado_old → $estado_new";
+        }
+        
+        if (!empty($changes)) {
+            $detalles = json_encode([
+                'cliente_id' => $this->id,
+                'cambios' => $changes,
+                'fecha_actualizacion' => date('Y-m-d H:i:s')
+            ]);
+            
+            $this->logNotification('CLIENTE_ACTUALIZADO', "Cliente API actualizado: {$this->razon_social}. Cambios: " . count($changes), null, $detalles);
+        }
+    }
+
+    /**
+     * Registrar notificación
+     */
+    private function logNotification($tipo, $mensaje, $usuario_id = null, $detalles = null) {
+        $database = new Database();
+        $database->logNotification($tipo, $mensaje, $usuario_id, $detalles);
     }
 }
 ?>
