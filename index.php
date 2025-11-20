@@ -90,9 +90,7 @@ if (empty($controller)) {
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
                         <div class="municipal-logo-compacto me-3">
-                            <img src="https://www.facebook.com/photo/?fbid=279888998442308&set=a.110194105411799" 
-                                 alt="Logo Municipalidad Provincial de Huanta" 
-                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 2px solid rgba(255,255,255,0.2);">
+                            <i class="fas fa-landmark fa-lg"></i>
                         </div>
                         <div>
                             <h4 class="mb-0 fw-bold">MUNICIPALIDAD PROVINCIAL DE HUANTA</h4>
