@@ -59,7 +59,7 @@ if (empty($controller)) {
     $requestsHoy = $countRequestModel->getStats(date('Y-m-d'), date('Y-m-d'))['requests_hoy'];
 
     // Incluir header del sistema
-    $pageTitle = 'Dashboard - Sistema Mototaxis Huanta';
+    $pageTitle = 'Sistema Mototaxis Huanta';
     include_once 'views/layouts/header.php';
 ?>
 
