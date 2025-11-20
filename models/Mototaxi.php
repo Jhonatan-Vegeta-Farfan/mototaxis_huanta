@@ -31,7 +31,7 @@ class Mototaxi {
         $query = "SELECT m.*, e.razon_social as empresa 
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
-                 ORDER BY m.id ASC";
+                 ORDER BY CAST(m.numero_asignado AS UNSIGNED) DESC, m.numero_asignado DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -43,7 +43,7 @@ class Mototaxi {
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
                  WHERE m.numero_asignado LIKE ? OR m.nombre_completo LIKE ? OR m.dni LIKE ? OR m.placa_rodaje LIKE ?
-                 ORDER BY m.id ASC";
+                 ORDER BY CAST(m.numero_asignado AS UNSIGNED) DESC, m.numero_asignado DESC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -86,7 +86,7 @@ class Mototaxi {
             $params[] = "%{$placa_rodaje}%";
         }
         
-        $query .= " ORDER BY m.id ASC";
+        $query .= " ORDER BY CAST(m.numero_asignado AS UNSIGNED) DESC, m.numero_asignado DESC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -104,7 +104,7 @@ class Mototaxi {
                  FROM " . $this->table_name . " m 
                  LEFT JOIN empresas e ON m.id_empresa = e.id 
                  WHERE m.id_empresa = ?
-                 ORDER BY m.id ASC";
+                 ORDER BY CAST(m.numero_asignado AS UNSIGNED) DESC, m.numero_asignado DESC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $empresa_id);
@@ -352,7 +352,7 @@ class Mototaxi {
             $query = "SELECT m.*, e.razon_social as empresa 
                      FROM " . $this->table_name . " m 
                      LEFT JOIN empresas e ON m.id_empresa = e.id 
-                     ORDER BY m.fecha_registro DESC 
+                     ORDER BY CAST(m.numero_asignado AS UNSIGNED) DESC, m.numero_asignado DESC 
                      LIMIT ?";
             
             $stmt = $this->conn->prepare($query);
