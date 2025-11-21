@@ -19,7 +19,7 @@ class ClientApi {
      * Leer todos los clientes API activos
      */
     public function read() {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id ASC";
+        $query = "SELECT * FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -62,7 +62,7 @@ class ClientApi {
     public function search($keywords) {
         $query = "SELECT * FROM " . $this->table_name . " 
                  WHERE (ruc LIKE ? OR razon_social LIKE ?) AND estado = 1
-                 ORDER BY id ASC";
+                 ORDER BY id DESC";
         
         $stmt = $this->conn->prepare($query);
         
@@ -99,7 +99,7 @@ class ClientApi {
             $query .= " AND estado = 1";
         }
         
-        $query .= " ORDER BY id ASC";
+        $query .= " ORDER BY id DESC";
         
         $stmt = $this->conn->prepare($query);
         
