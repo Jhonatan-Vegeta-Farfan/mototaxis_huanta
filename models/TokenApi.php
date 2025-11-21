@@ -20,7 +20,7 @@ class TokenApi {
         $query = "SELECT t.*, c.razon_social, c.ruc, c.estado as cliente_estado
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 ORDER BY t.id ASC";
+                 ORDER BY CAST(t.id AS UNSIGNED) DESC, t.id DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -34,7 +34,7 @@ class TokenApi {
                  FROM " . $this->table_name . " t 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ? AND t.estado = 1
-                 ORDER BY t.id ASC";
+                 ORDER BY CAST(t.id AS UNSIGNED) DESC, t.id DESC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $client_id);
@@ -381,6 +381,46 @@ class TokenApi {
      */
     public function reorganizarTodosLosIds() {
         return $this->reorganizarTokens();
+    }
+
+    /**
+     * Obtener tokens recientemente registrados
+     */
+    public function getRecent($limit = 5) {
+        try {
+            $query = "SELECT t.*, c.razon_social, c.ruc
+                     FROM " . $this->table_name . " t 
+                     LEFT JOIN client_api c ON t.id_client_api = c.id 
+                     WHERE t.estado = 1
+                     ORDER BY CAST(t.id AS UNSIGNED) DESC, t.id DESC 
+                     LIMIT ?";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log("Error en getRecent: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Buscar tokens por cliente específico
+     */
+    public function searchByClient($client_name) {
+        $query = "SELECT t.*, c.razon_social, c.ruc
+                 FROM " . $this->table_name . " t 
+                 LEFT JOIN client_api c ON t.id_client_api = c.id 
+                 WHERE c.razon_social LIKE ? OR c.ruc LIKE ?
+                 ORDER BY CAST(t.id AS UNSIGNED) DESC, t.id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $search_term = "%{$client_name}%";
+        $stmt->bindParam(1, $search_term);
+        $stmt->bindParam(2, $search_term);
+        $stmt->execute();
+        return $stmt;
     }
 }
 ?>
