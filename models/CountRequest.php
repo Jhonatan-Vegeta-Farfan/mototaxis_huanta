@@ -20,7 +20,7 @@ class CountRequest {
                  FROM " . $this->table_name . " cr 
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
-                 ORDER BY cr.id ASC";
+                 ORDER BY cr.id DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -32,7 +32,7 @@ class CountRequest {
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE t.id_client_api = ?
-                 ORDER BY cr.id ASC";
+                 ORDER BY cr.id DESC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $client_id);
@@ -46,7 +46,7 @@ class CountRequest {
                  LEFT JOIN tokens_api t ON cr.id_token_api = t.id 
                  LEFT JOIN client_api c ON t.id_client_api = c.id 
                  WHERE cr.id_token_api = ?
-                 ORDER BY cr.id ASC";
+                 ORDER BY cr.id DESC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $token_id);
@@ -73,7 +73,7 @@ class CountRequest {
             $params[] = $fecha_fin;
         }
         
-        $query .= " ORDER BY cr.id ASC";
+        $query .= " ORDER BY cr.id DESC";
         
         $stmt = $this->conn->prepare($query);
         
