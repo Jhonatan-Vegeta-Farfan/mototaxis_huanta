@@ -196,7 +196,7 @@ class MototaxiController {
         exit();
     }
 
-    // NUEVO MÉTODO PARA VER DETALLES
+    // MÉTODO PARA VER DETALLES
     public function view() {
         $this->model->id = intval($_GET['id']);
         
@@ -210,7 +210,7 @@ class MototaxiController {
         }
     }
 
-    // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
+    // MÉTODO PARA BÚSQUEDA ESPECÍFICA
     public function search() {
         $search_keywords = isset($_GET['q']) ? trim($_GET['q']) : '';
         
@@ -223,7 +223,7 @@ class MototaxiController {
         include_once 'views/mototaxis/index.php';
     }
 
-    // NUEVO MÉTODO: Exportar a Excel
+    // MÉTODO: Exportar a Excel
     public function exportar() {
         $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : 'todos';
         
@@ -273,7 +273,7 @@ class MototaxiController {
         exit();
     }
 
-    // NUEVO MÉTODO: Estadísticas
+    // MÉTODO: Estadísticas
     public function estadisticas() {
         $stats = [
             'total_mototaxis' => 0,
