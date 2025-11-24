@@ -158,25 +158,10 @@
                                    data-bs-toggle="tooltip" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                                <button type="button" class="btn btn-info btn-sm view-details" 
-                                        data-bs-toggle="modal" data-bs-target="#detailsModal"
-                                        data-id="<?php echo $row['id']; ?>"
-                                        data-numero="<?php echo $row['numero_asignado']; ?>"
-                                        data-nombre="<?php echo $row['nombre_completo']; ?>"
-                                        data-dni="<?php echo $row['dni']; ?>"
-                                        data-direccion="<?php echo $row['direccion']; ?>"
-                                        data-placa="<?php echo $row['placa_rodaje']; ?>"
-                                        data-anio="<?php echo $row['anio_fabricacion']; ?>"
-                                        data-marca="<?php echo $row['marca']; ?>"
-                                        data-motor="<?php echo $row['numero_motor']; ?>"
-                                        data-tipo-motor="<?php echo $row['tipo_motor']; ?>"
-                                        data-serie="<?php echo $row['serie']; ?>"
-                                        data-color="<?php echo $row['color']; ?>"
-                                        data-fecha="<?php echo $row['fecha_registro']; ?>"
-                                        data-empresa="<?php echo $row['empresa']; ?>"
-                                        data-bs-toggle="tooltip" title="Ver Detalles">
+                                <a href="index.php?controller=mototaxis&action=view&id=<?php echo $row['id']; ?>" 
+                                   class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Ver Detalles Completos">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -197,132 +182,9 @@
     </div>
 </div>
 
-<!-- Modal para Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="detailsModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>Detalles del Mototaxi
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Personal</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Número Asignado:</th>
-                                <td id="modal-numero"></td>
-                            </tr>
-                            <tr>
-                                <th>Nombre Completo:</th>
-                                <td id="modal-nombre"></td>
-                            </tr>
-                            <tr>
-                                <th>DNI:</th>
-                                <td id="modal-dni"></td>
-                            </tr>
-                            <tr>
-                                <th>Dirección:</th>
-                                <td id="modal-direccion"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información del Vehículo</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Placa de Rodaje:</th>
-                                <td id="modal-placa"></td>
-                            </tr>
-                            <tr>
-                                <th>Año Fabricación:</th>
-                                <td id="modal-anio"></td>
-                            </tr>
-                            <tr>
-                                <th>Marca:</th>
-                                <td id="modal-marca"></td>
-                            </tr>
-                            <tr>
-                                <th>Color:</th>
-                                <td id="modal-color"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Especificaciones Técnicas</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Número Motor:</th>
-                                <td id="modal-motor"></td>
-                            </tr>
-                            <tr>
-                                <th>Tipo Motor:</th>
-                                <td id="modal-tipo-motor"></td>
-                            </tr>
-                            <tr>
-                                <th>Serie:</th>
-                                <td id="modal-serie"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Adicional</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Fecha Registro:</th>
-                                <td id="modal-fecha"></td>
-                            </tr>
-                            <tr>
-                                <th>Empresa:</th>
-                                <td id="modal-empresa"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-// Script para el modal de detalles
+// Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
-    const viewButtons = document.querySelectorAll('.view-details');
-    
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Obtener datos de los atributos data
-            document.getElementById('modal-numero').textContent = this.getAttribute('data-numero');
-            document.getElementById('modal-nombre').textContent = this.getAttribute('data-nombre');
-            document.getElementById('modal-dni').textContent = this.getAttribute('data-dni');
-            document.getElementById('modal-direccion').textContent = this.getAttribute('data-direccion') || 'No especificado';
-            document.getElementById('modal-placa').textContent = this.getAttribute('data-placa');
-            document.getElementById('modal-anio').textContent = this.getAttribute('data-anio') || 'No especificado';
-            document.getElementById('modal-marca').textContent = this.getAttribute('data-marca') || 'No especificado';
-            document.getElementById('modal-color').textContent = this.getAttribute('data-color') || 'No especificado';
-            document.getElementById('modal-motor').textContent = this.getAttribute('data-motor') || 'No especificado';
-            document.getElementById('modal-tipo-motor').textContent = this.getAttribute('data-tipo-motor') || 'No especificado';
-            document.getElementById('modal-serie').textContent = this.getAttribute('data-serie') || 'No especificado';
-            document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
-            document.getElementById('modal-empresa').textContent = this.getAttribute('data-empresa');
-            
-            // Actualizar título del modal
-            document.getElementById('detailsModalLabel').textContent = 
-                'Detalles - ' + this.getAttribute('data-numero');
-        });
-    });
-    
-    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
