@@ -337,11 +337,6 @@ if (empty($controller)) {
                         </div>
                     </a>
                 </div>
-
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <a href="api.php" target="_blank" class="action-card-corp" data-aos="zoom-in" data-aos-delay="500">
-                    </a>
-                </div>
             </div>
         </div>
     </div>
