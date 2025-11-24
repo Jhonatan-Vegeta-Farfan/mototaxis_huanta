@@ -340,13 +340,6 @@ if (empty($controller)) {
 
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <a href="api.php" target="_blank" class="action-card-corp" data-aos="zoom-in" data-aos-delay="500">
-                        <div class="action-icon-corp">
-                            <i class="fas fa-code"></i>
-                        </div>
-
-                        <div class="action-arrow-corp">
-                            <i class="fas fa-external-link-alt"></i>
-                        </div>
                     </a>
                 </div>
             </div>
