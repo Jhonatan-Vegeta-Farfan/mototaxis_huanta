@@ -343,10 +343,7 @@ if (empty($controller)) {
                         <div class="action-icon-corp">
                             <i class="fas fa-code"></i>
                         </div>
-                        <div class="action-content-corp">
-                            <h4>API Pública</h4>
-                            <p>Documentación y pruebas de API</p>
-                        </div>
+
                         <div class="action-arrow-corp">
                             <i class="fas fa-external-link-alt"></i>
                         </div>
