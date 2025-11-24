@@ -73,14 +73,14 @@
                         </td>
                         <td>
                             <code class="text-light bg-dark p-1 rounded d-block" style="font-size: 0.8rem;">
-                                <?php echo $row['token']; ?>
+                                <?php echo substr($row['token'], 0, 30) . '...'; ?>
                             </code>
                             <small class="text-muted d-block mt-1">
                                 ID Cliente: <?php echo $row['id_client_api']; ?>
                             </small>
                         </td>
                         <td>
-                            <span class="badge bg-secondary"><?php echo $row['fecha_registro']; ?></span>
+                            <span class="badge bg-secondary"><?php echo date('d/m/Y', strtotime($row['fecha_registro'])); ?></span>
                         </td>
                         <td>
                             <span class="badge bg-<?php echo $row['estado'] == 1 ? 'success' : 'danger'; ?>">
@@ -99,17 +99,10 @@
                                    data-bs-toggle="tooltip" title="Eliminar Token">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                                <button type="button" class="btn btn-info btn-sm view-details" 
-                                        data-bs-toggle="modal" data-bs-target="#detailsModal"
-                                        data-id="<?php echo $row['id']; ?>"
-                                        data-cliente="<?php echo $row['razon_social']; ?>"
-                                        data-token="<?php echo $row['token']; ?>"
-                                        data-fecha="<?php echo $row['fecha_registro']; ?>"
-                                        data-estado="<?php echo $row['estado']; ?>"
-                                        data-ruc="<?php echo $row['ruc']; ?>"
-                                        data-bs-toggle="tooltip" title="Ver Detalles">
+                                <a href="index.php?controller=tokens_api&action=view&id=<?php echo $row['id']; ?>" 
+                                   class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Ver Detalles Completos">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                                 <a href="index.php?controller=count_request&action=index&token_id=<?php echo $row['id']; ?>" 
                                    class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Ver Requests">
                                     <i class="fas fa-chart-bar"></i>
@@ -143,103 +136,9 @@
     </div>
 </div>
 
-<!-- Modal para Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="detailsModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>Detalles del Token API
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información del Token</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>ID del Token:</th>
-                                <td id="modal-id"></td>
-                            </tr>
-                            <tr>
-                                <th>Cliente:</th>
-                                <td id="modal-cliente"></td>
-                            </tr>
-                            <tr>
-                                <th>RUC:</th>
-                                <td id="modal-ruc"></td>
-                            </tr>
-                            <tr>
-                                <th>Estado:</th>
-                                <td id="modal-estado"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Técnica</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Fecha Registro:</th>
-                                <td id="modal-fecha"></td>
-                            </tr>
-                            <tr>
-                                <th>Token Completo:</th>
-                                <td>
-                                    <code id="modal-token" class="bg-dark text-light p-2 rounded d-block" style="word-break: break-all;"></code>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6 class="text-warning">Acciones Disponibles</h6>
-                        <div class="d-grid gap-2 d-md-flex">
-                            <a href="#" class="btn btn-warning me-2" id="modal-edit-link">
-                                <i class="fas fa-edit me-1"></i> Editar Token
-                            </a>
-                            <a href="#" class="btn btn-primary me-2" id="modal-requests-link">
-                                <i class="fas fa-chart-bar me-1"></i> Ver Requests
-                            </a>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i> Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+// Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
-    const viewButtons = document.querySelectorAll('.view-details');
-    
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tokenId = this.getAttribute('data-id');
-            
-            document.getElementById('modal-id').textContent = tokenId;
-            document.getElementById('modal-cliente').textContent = this.getAttribute('data-cliente');
-            document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
-            document.getElementById('modal-token').textContent = this.getAttribute('data-token');
-            document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
-            
-            const estado = this.getAttribute('data-estado');
-            const estadoText = estado == '1' ? 'Activo' : 'Inactivo';
-            const estadoClass = estado == '1' ? 'success' : 'danger';
-            document.getElementById('modal-estado').innerHTML = `<span class="badge bg-${estadoClass}">${estadoText}</span>`;
-            
-            document.getElementById('modal-edit-link').href = `index.php?controller=tokens_api&action=edit&id=${tokenId}`;
-            document.getElementById('modal-requests-link').href = `index.php?controller=count_request&action=index&token_id=${tokenId}`;
-            
-            document.getElementById('detailsModalLabel').textContent = 
-                'Detalles del Token - ID: ' + tokenId;
-        });
-    });
-    
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
