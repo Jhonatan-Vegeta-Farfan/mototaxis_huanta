@@ -133,7 +133,7 @@
                         <td><?php echo $row['telefono'] ?: '<span class="text-muted">No especificado</span>'; ?></td>
                         <td><?php echo $row['correo'] ?: '<span class="text-muted">No especificado</span>'; ?></td>
                         <td>
-                            <span class="badge bg-secondary"><?php echo $row['fecha_registro']; ?></span>
+                            <span class="badge bg-secondary"><?php echo date('d/m/Y', strtotime($row['fecha_registro'])); ?></span>
                         </td>
                         <td>
                             <span class="badge bg-<?php echo $row['estado'] == 1 ? 'success' : 'danger'; ?>">
@@ -152,18 +152,10 @@
                                    data-bs-toggle="tooltip" title="Eliminar Cliente">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                                <button type="button" class="btn btn-info btn-sm view-details" 
-                                        data-bs-toggle="modal" data-bs-target="#detailsModal"
-                                        data-id="<?php echo $row['id']; ?>"
-                                        data-ruc="<?php echo $row['ruc']; ?>"
-                                        data-razon-social="<?php echo $row['razon_social']; ?>"
-                                        data-telefono="<?php echo $row['telefono']; ?>"
-                                        data-correo="<?php echo $row['correo']; ?>"
-                                        data-fecha="<?php echo $row['fecha_registro']; ?>"
-                                        data-estado="<?php echo $row['estado']; ?>"
-                                        data-bs-toggle="tooltip" title="Ver Detalles">
+                                <a href="index.php?controller=client_api&action=view&id=<?php echo $row['id']; ?>" 
+                                   class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Ver Detalles Completos">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                                 <a href="index.php?controller=tokens_api&action=index&client_id=<?php echo $row['id']; ?>" 
                                    class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Ver Tokens">
                                     <i class="fas fa-key"></i>
@@ -188,110 +180,15 @@
     </div>
 </div>
 
-<!-- Modal para Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="detailsModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>Detalles del Cliente API
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Principal</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>RUC:</th>
-                                <td id="modal-ruc"></td>
-                            </tr>
-                            <tr>
-                                <th>Razón Social:</th>
-                                <td id="modal-razon-social"></td>
-                            </tr>
-                            <tr>
-                                <th>Estado:</th>
-                                <td id="modal-estado"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información de Contacto</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Teléfono:</th>
-                                <td id="modal-telefono"></td>
-                            </tr>
-                            <tr>
-                                <th>Correo:</th>
-                                <td id="modal-correo"></td>
-                            </tr>
-                            <tr>
-                                <th>Fecha Registro:</th>
-                                <td id="modal-fecha"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6 class="text-warning">Acciones Disponibles</h6>
-                        <div class="d-grid gap-2 d-md-flex">
-                            <a href="#" class="btn btn-warning me-2" id="modal-edit-link">
-                                <i class="fas fa-edit me-1"></i> Editar Cliente
-                            </a>
-                            <a href="#" class="btn btn-primary me-2" id="modal-tokens-link">
-                                <i class="fas fa-key me-1"></i> Ver Tokens
-                            </a>
-                            <a href="#" class="btn btn-info me-2" id="modal-requests-link">
-                                <i class="fas fa-chart-bar me-1"></i> Ver Requests
-                            </a>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i> Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+// Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
-    const viewButtons = document.querySelectorAll('.view-details');
-    
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const clientId = this.getAttribute('data-id');
-            
-            document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
-            document.getElementById('modal-razon-social').textContent = this.getAttribute('data-razon-social');
-            document.getElementById('modal-telefono').textContent = this.getAttribute('data-telefono') || 'No especificado';
-            document.getElementById('modal-correo').textContent = this.getAttribute('data-correo') || 'No especificado';
-            document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
-            
-            const estado = this.getAttribute('data-estado');
-            const estadoText = estado == '1' ? 'Activo' : 'Inactivo';
-            const estadoClass = estado == '1' ? 'success' : 'danger';
-            document.getElementById('modal-estado').innerHTML = `<span class="badge bg-${estadoClass}">${estadoText}</span>`;
-            
-            document.getElementById('modal-edit-link').href = `index.php?controller=client_api&action=edit&id=${clientId}`;
-            document.getElementById('modal-tokens-link').href = `index.php?controller=tokens_api&action=index&client_id=${clientId}`;
-            document.getElementById('modal-requests-link').href = `index.php?controller=count_request&action=index&client_id=${clientId}`;
-            
-            document.getElementById('detailsModalLabel').textContent = 
-                'Detalles - ' + this.getAttribute('data-razon-social');
-        });
-    });
-    
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
+    // Auto-focus en el campo de búsqueda
     const searchInput = document.querySelector('input[name="search"]');
     if (searchInput) {
         searchInput.focus();

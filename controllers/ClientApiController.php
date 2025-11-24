@@ -154,7 +154,7 @@ class ClientApiController {
     }
 
     /**
-     * NUEVO: Mostrar detalles de un cliente API específico
+     * Mostrar detalles de un cliente API específico
      */
     public function view() {
         $this->model->id = intval($_GET['id']);
@@ -164,9 +164,8 @@ class ClientApiController {
             $tokenModel = new TokenApi($this->db);
             $tokens = $tokenModel->getByClient($this->model->id);
             
-            // Obtener estadísticas de requests
-            $requestModel = new CountRequest($this->db);
-            $requests = $requestModel->getByClient($this->model->id);
+            // Obtener estadísticas
+            $stats = $this->model->getStats($this->model->id);
             
             $db_connection = $this->db;
             include_once 'views/client_api/view.php';
@@ -178,7 +177,7 @@ class ClientApiController {
     }
 
     /**
-     * NUEVO: Activar/Desactivar cliente API
+     * Activar/Desactivar cliente API
      */
     public function toggleStatus() {
         $this->model->id = intval($_GET['id']);
