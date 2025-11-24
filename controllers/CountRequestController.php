@@ -111,7 +111,7 @@ class CountRequestController {
         exit();
     }
 
-    // NUEVO: Mostrar detalles de un request específico
+    // Mostrar detalles de un request específico
     public function view() {
         $this->model->id = intval($_GET['id']);
         
@@ -126,7 +126,7 @@ class CountRequestController {
         }
     }
 
-    // NUEVO: Estadísticas de requests
+    // Estadísticas de requests
     public function estadisticas() {
         $fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-01');
         $fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-d');
@@ -137,7 +137,7 @@ class CountRequestController {
         include_once 'views/count_request/estadisticas.php';
     }
 
-    // NUEVO: Limpiar requests antiguos
+    // Limpiar requests antiguos
     public function limpiar() {
         $dias = isset($_GET['dias']) ? intval($_GET['dias']) : 30;
         

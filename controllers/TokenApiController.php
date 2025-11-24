@@ -131,22 +131,10 @@ class TokenApiController {
         $this->model->id = $_GET['id'];
         
         if($this->model->readOne()) {
-            // Obtener información del cliente
-            $clientModel = new ClientApi($this->db);
-            $clientModel->id = $this->model->id_client_api;
-            $clientInfo = null;
-            if ($clientModel->readOne()) {
-                $clientInfo = $clientModel;
-            }
-            
-            // Obtener estadísticas de requests
-            $requestModel = new CountRequest($this->db);
-            $stats = $requestModel->getStatsByToken($this->model->id);
-            
+            $clientes = $this->model->getClientes();
             $db_connection = $this->db;
             include_once 'views/tokens_api/view.php';
         } else {
-            $_SESSION['error_message'] = 'Token no encontrado';
             header("Location: index.php?controller=tokens_api&action=index");
             exit();
         }
