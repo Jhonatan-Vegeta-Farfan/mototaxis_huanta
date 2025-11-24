@@ -1,7 +1,7 @@
 <footer>
     <div class="footer-content">
         <div>&copy; 2025 Mototaxis Huanta. Todos los derechos reservados.</div>
-        <div>Desarrollado por <span class="footer-developer">VegeTA</span></div>
+        <div>Desarrollado por <span class="footer-developer">VegetA</span></div>
     </div>
 </footer>
 
