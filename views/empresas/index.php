@@ -128,7 +128,7 @@
                         </td>
                         <td><?php echo $row['representante_legal']; ?></td>
                         <td>
-                            <span class="badge bg-secondary"><?php echo $row['fecha_registro']; ?></span>
+                            <span class="badge bg-secondary"><?php echo date('d/m/Y', strtotime($row['fecha_registro'])); ?></span>
                         </td>
                         <td>
                             <div class="btn-group" role="group">
@@ -142,16 +142,10 @@
                                    data-bs-toggle="tooltip" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                                <button type="button" class="btn btn-info btn-sm view-details" 
-                                        data-bs-toggle="modal" data-bs-target="#detailsModal"
-                                        data-id="<?php echo $row['id']; ?>"
-                                        data-ruc="<?php echo $row['ruc']; ?>"
-                                        data-razon-social="<?php echo $row['razon_social']; ?>"
-                                        data-representante="<?php echo $row['representante_legal']; ?>"
-                                        data-fecha="<?php echo $row['fecha_registro']; ?>"
-                                        data-bs-toggle="tooltip" title="Ver Detalles">
+                                <a href="index.php?controller=empresas&action=view&id=<?php echo $row['id']; ?>" 
+                                   class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Ver Detalles Completos">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -172,97 +166,9 @@
     </div>
 </div>
 
-<!-- Modal para Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="detailsModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>Detalles de la Empresa
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Principal</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>RUC:</th>
-                                <td id="modal-ruc"></td>
-                            </tr>
-                            <tr>
-                                <th>Razón Social:</th>
-                                <td id="modal-razon-social"></td>
-                            </tr>
-                            <tr>
-                                <th>Representante Legal:</th>
-                                <td id="modal-representante"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Información Adicional</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Fecha de Registro:</th>
-                                <td id="modal-fecha"></td>
-                            </tr>
-                            <tr>
-                                <th>ID de Empresa:</th>
-                                <td id="modal-id"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6 class="text-warning">Acciones Disponibles</h6>
-                        <div class="d-grid gap-2 d-md-flex">
-                            <a href="#" class="btn btn-warning me-2" id="modal-edit-link">
-                                <i class="fas fa-edit me-1"></i> Editar Empresa
-                            </a>
-                            <a href="#" class="btn btn-info me-2" id="modal-mototaxis-link">
-                                <i class="fas fa-motorcycle me-1"></i> Ver Mototaxis
-                            </a>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i> Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-// Script para el modal de detalles
+// Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
-    const viewButtons = document.querySelectorAll('.view-details');
-    
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const empresaId = this.getAttribute('data-id');
-            
-            // Obtener datos de los atributos data
-            document.getElementById('modal-id').textContent = empresaId;
-            document.getElementById('modal-ruc').textContent = this.getAttribute('data-ruc');
-            document.getElementById('modal-razon-social').textContent = this.getAttribute('data-razon-social');
-            document.getElementById('modal-representante').textContent = this.getAttribute('data-representante');
-            document.getElementById('modal-fecha').textContent = this.getAttribute('data-fecha');
-            
-            // Actualizar enlaces de acciones
-            document.getElementById('modal-edit-link').href = `index.php?controller=empresas&action=edit&id=${empresaId}`;
-            document.getElementById('modal-mototaxis-link').href = `index.php?controller=mototaxis&action=index&empresa_id=${empresaId}`;
-            
-            // Actualizar título del modal
-            document.getElementById('detailsModalLabel').textContent = 
-                'Detalles - ' + this.getAttribute('data-razon-social');
-        });
-    });
-    
-    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

@@ -149,7 +149,7 @@ class EmpresaController {
         exit();
     }
 
-    // NUEVO MÉTODO PARA VER DETALLES
+    // MÉTODO PARA VER DETALLES
     public function view() {
         $this->model->id = intval($_GET['id']);
         
@@ -166,7 +166,7 @@ class EmpresaController {
         }
     }
 
-    // NUEVO MÉTODO PARA BÚSQUEDA ESPECÍFICA
+    // MÉTODO PARA BÚSQUEDA ESPECÍFICA
     public function search() {
         $search_keywords = isset($_GET['q']) ? trim($_GET['q']) : '';
         
@@ -179,7 +179,7 @@ class EmpresaController {
         include_once 'views/empresas/index.php';
     }
 
-    // NUEVO MÉTODO: Estadísticas de la empresa
+    // MÉTODO: Estadísticas de la empresa
     public function estadisticas() {
         $this->model->id = intval($_GET['id']);
         
