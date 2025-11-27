@@ -302,6 +302,11 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="index.php?controller=usuarios&action=index">
+                                <i class="fas fa-user-shield"></i> Usuarios
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="index.php?controller=count_request&action=index">
                                 <i class="fas fa-chart-bar"></i> Requests
                             </a>

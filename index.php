@@ -14,6 +14,7 @@ require_once 'models/TokenApi.php';
 require_once 'models/CountRequest.php';
 require_once 'models/Empresa.php';
 require_once 'models/Mototaxi.php';
+require_once 'models/Usuario.php';
 
 // Incluir controladores
 require_once 'controllers/ClientApiController.php';
@@ -21,6 +22,7 @@ require_once 'controllers/TokenApiController.php';
 require_once 'controllers/CountRequestController.php';
 require_once 'controllers/EmpresaController.php';
 require_once 'controllers/MototaxiController.php';
+require_once 'controllers/UsuarioController.php';
 
 // Conexión a la base de datos
 $database = new Database();
@@ -48,12 +50,14 @@ if (empty($controller)) {
     $clientApiModel = new ClientApi($db);
     $tokenApiModel = new TokenApi($db);
     $countRequestModel = new CountRequest($db);
+    $usuarioModel = new Usuario($db);
     
     $totalEmpresas = $empresaModel->read()->rowCount();
     $totalMototaxis = $mototaxiModel->read()->rowCount();
     $totalClientesApi = $clientApiModel->read()->rowCount();
     $totalTokens = $tokenApiModel->read()->rowCount();
     $totalRequests = $countRequestModel->read()->rowCount();
+    $totalUsuarios = $usuarioModel->read()->rowCount();
 
     // Obtener requests de hoy
     $requestsHoy = $countRequestModel->getStats(date('Y-m-d'), date('Y-m-d'))['requests_hoy'];
@@ -220,22 +224,22 @@ if (empty($controller)) {
                     </div>
                 </div>
 
-                <!-- Requests Totales -->
+                <!-- Usuarios Sistema -->
                 <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="stat-card-corp" data-aos="fade-up" data-aos-delay="500">
                         <div class="card-header-corp">
                             <div class="card-icon-corp bg-secondary">
-                                <i class="fas fa-chart-bar"></i>
+                                <i class="fas fa-user-shield"></i>
                             </div>
-                            <div class="card-badge">Totales</div>
+                            <div class="card-badge">Activos</div>
                         </div>
                         <div class="card-body-corp">
-                            <h3 class="card-title-corp">SOLICITUDES</h3>
-                            <div class="card-number-corp" data-count="<?php echo $totalRequests; ?>">0</div>
-                            <p class="card-desc-corp">Solicitudes procesadas</p>
+                            <h3 class="card-title-corp">USUARIOS</h3>
+                            <div class="card-number-corp" data-count="<?php echo $totalUsuarios; ?>">0</div>
+                            <p class="card-desc-corp">Usuarios del sistema</p>
                         </div>
                         <div class="card-footer-corp">
-                            <a href="index.php?controller=count_request&action=index" class="btn-corp-primary">
+                            <a href="index.php?controller=usuarios&action=index" class="btn-corp-primary">
                                 <span>Gestionar</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
@@ -324,13 +328,13 @@ if (empty($controller)) {
                 </div>
 
                 <div class="col-xl-3 col-lg-4 col-md-6">
-                    <a href="index.php?controller=tokens_api&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="400">
+                    <a href="index.php?controller=usuarios&action=create" class="action-card-corp" data-aos="zoom-in" data-aos-delay="400">
                         <div class="action-icon-corp">
-                            <i class="fas fa-key"></i>
+                            <i class="fas fa-user-plus"></i>
                         </div>
                         <div class="action-content-corp">
-                            <h4>Nuevo Token</h4>
-                            <p>Generar token de acceso</p>
+                            <h4>Nuevo Usuario</h4>
+                            <p>Crear usuario del sistema</p>
                         </div>
                         <div class="action-arrow-corp">
                             <i class="fas fa-chevron-right"></i>
@@ -722,6 +726,9 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
         case 'mototaxis':
             $controllerObj = new MototaxiController($db);
+            break;
+        case 'usuarios':
+            $controllerObj = new UsuarioController($db);
             break;
         default:
             $_SESSION['error_message'] = 'Controlador no encontrado';
