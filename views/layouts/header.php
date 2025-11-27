@@ -2,6 +2,15 @@
 // Verificar si es una página pública o administrativa
 $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_public') || 
                 (basename($_SERVER['PHP_SELF']) === 'api.php');
+
+// Determinar la ruta correcta para los assets
+$basePath = '';
+if (isset($_SERVER['SCRIPT_NAME'])) {
+    $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+    if ($scriptPath !== '/') {
+        $basePath = $scriptPath;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -23,32 +32,39 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Estilos personalizados -->
-    <link href="../assets/css/styles.css" rel="stylesheet">
+    <link href="<?php echo $basePath; ?>/assets/css/styles.css" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #1e3c72;
-            --secondary-color: #2a5298;
-            --accent-color: #0f3a4a;
-            --highlight-color: #2a5298;
-            --highlight-hover: #1e3c72;
-            --text-light: #ffffff;
-            --text-muted: #e9ecef;
-            --gradient-primary: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            --gradient-secondary: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --primary-blue: #1e3c72;
+            --secondary-blue: #2a5298;
+            --accent-blue: #0f3a4a;
+            --light-blue: #e3f2fd;
+            --dark-blue: #0d1b2a;
+            --success-green: #198754;
+            --warning-orange: #fd7e14;
+            --danger-red: #dc3545;
+            --info-cyan: #0dcaf0;
+            --white: #ffffff;
+            --gray: #6b7280;
+            --light-gray: #9ca3af;
+            --dark-gray: #374151;
+            --border-color: #dee2e6;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
             padding-top: 80px;
+            min-height: 100vh;
         }
         
         /* Header Corporativo */
         .navbar {
-            background: var(--gradient-primary);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 0.5rem 0;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            border-bottom: 3px solid var(--accent-blue);
+            box-shadow: 0 4px 20px rgba(30, 60, 114, 0.3);
+            padding: 0.8rem 0;
             transition: all 0.3s ease;
             position: fixed;
             top: 0;
@@ -91,7 +107,7 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
         .navbar-brand {
             font-weight: 700;
             font-size: 1.4rem;
-            color: var(--text-light) !important;
+            color: var(--white) !important;
             display: flex;
             align-items: center;
             text-decoration: none;
@@ -113,7 +129,7 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
         }
         
         .nav-link {
-            color: var(--text-light) !important;
+            color: var(--white) !important;
             font-weight: 500;
             padding: 0.6rem 1rem !important;
             border-radius: 6px;
@@ -154,21 +170,16 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
         
-        /* Responsive Design */
-        @media (max-width: 1199px) {
-            .nav-link {
-                padding: 0.5rem 0.8rem !important;
-                font-size: 0.9rem;
-            }
-            
-            .navbar-brand {
-                font-size: 1.3rem;
-            }
+        /* Asegurar que el contenido no se solape con el header fijo */
+        .main-content {
+            min-height: calc(100vh - 80px);
+            padding: 20px 0;
         }
-        
+
+        /* Responsive Design */
         @media (max-width: 991px) {
             .navbar-collapse {
-                background: var(--gradient-primary);
+                background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
                 border-radius: 0 0 8px 8px;
                 padding: 1rem;
                 margin-top: 0.5rem;
@@ -203,15 +214,6 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
             .logo-img {
                 height: 40px;
             }
-            
-            .nav-link {
-                font-size: 0.9rem;
-            }
-            
-            .nav-link i {
-                font-size: 0.9rem;
-                width: 18px;
-            }
         }
         
         @media (max-width: 576px) {
@@ -223,39 +225,6 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
                 margin-right: 0;
                 font-size: 1.3rem;
             }
-            
-            .logo-container {
-                margin-right: 10px;
-            }
-            
-            .logo-img {
-                height: 35px;
-            }
-            
-            .navbar-brand-section {
-                flex: 1;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .container {
-                padding: 0 10px;
-            }
-            
-            .nav-link {
-                padding: 0.7rem 0.8rem !important;
-                font-size: 0.85rem;
-            }
-            
-            .nav-link i {
-                margin-right: 6px;
-                font-size: 0.85rem;
-            }
-        }
-        
-        /* Asegurar que el contenido no se solape con el header fijo */
-        .main-content {
-            min-height: calc(100vh - 80px);
         }
     </style>
 </head>
@@ -319,3 +288,4 @@ $isPublicPage = (isset($_GET['controller']) && $_GET['controller'] === 'api_publ
     <?php endif; ?>
 
     <div class="main-content">
+        <div class="container-fluid">

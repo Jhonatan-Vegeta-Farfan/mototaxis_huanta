@@ -38,14 +38,15 @@ include_once 'layouts/header.php';
 
     <!-- Users Table -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">
                 <i class="fas fa-list fa-fw"></i> Lista de Usuarios
             </h6>
+            <span class="badge bg-primary">Total: <?php echo $stmt->rowCount(); ?> usuarios</span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
@@ -58,22 +59,35 @@ include_once 'layouts/header.php';
                     </thead>
                     <tbody>
                         <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($row['id']); ?></td>
-                            <td><?php echo htmlspecialchars($row['nombre']); ?></td>
-                            <td><?php echo htmlspecialchars($row['usuario']); ?></td>
+                        <tr class="user-row">
+                            <td class="fw-bold"><?php echo htmlspecialchars($row['id']); ?></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar-small">
+                                        <?php echo strtoupper(substr($row['nombre'], 0, 1)); ?>
+                                    </div>
+                                    <span class="ms-2"><?php echo htmlspecialchars($row['nombre']); ?></span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="user-username"><?php echo htmlspecialchars($row['usuario']); ?></span>
+                            </td>
                             <td><?php echo htmlspecialchars($row['fecha_registro']); ?></td>
                             <td>
                                 <?php if ($row['estado'] == 1): ?>
-                                    <span class="badge bg-success">Activo</span>
+                                    <span class="badge bg-success user-status-active">
+                                        <i class="fas fa-check-circle me-1"></i>Activo
+                                    </span>
                                 <?php else: ?>
-                                    <span class="badge bg-danger">Inactivo</span>
+                                    <span class="badge bg-danger user-status-inactive">
+                                        <i class="fas fa-times-circle me-1"></i>Inactivo
+                                    </span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <div class="btn-group" role="group">
+                                <div class="action-buttons">
                                     <a href="index.php?controller=usuarios&action=view&id=<?php echo $row['id']; ?>" 
-                                       class="btn btn-info btn-sm" title="Ver">
+                                       class="btn btn-info btn-sm" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <a href="index.php?controller=usuarios&action=edit&id=<?php echo $row['id']; ?>" 

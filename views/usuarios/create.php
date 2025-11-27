@@ -18,11 +18,11 @@ include_once 'layouts/header.php';
 
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+            <div class="card shadow mb-4 user-form">
+                <div class="user-form-header">
+                    <h3 class="mb-0">
                         <i class="fas fa-user-circle fa-fw"></i> Datos del Usuario
-                    </h6>
+                    </h3>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($error)): ?>
@@ -37,13 +37,15 @@ include_once 'layouts/header.php';
                                 <label for="nombre" class="form-label">Nombre Completo *</label>
                                 <input type="text" class="form-control" id="nombre" name="nombre" 
                                        value="<?php echo isset($_POST['nombre']) ? htmlspecialchars($_POST['nombre']) : ''; ?>" 
-                                       required>
+                                       required placeholder="Ingrese el nombre completo">
+                                <div class="form-text">Ej: Juan Pérez García</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="usuario" class="form-label">Usuario *</label>
                                 <input type="text" class="form-control" id="usuario" name="usuario" 
                                        value="<?php echo isset($_POST['usuario']) ? htmlspecialchars($_POST['usuario']) : ''; ?>" 
-                                       required>
+                                       required placeholder="Ingrese el nombre de usuario">
+                                <div class="form-text">Mínimo 3 caracteres</div>
                             </div>
                         </div>
 
@@ -51,7 +53,7 @@ include_once 'layouts/header.php';
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Contraseña *</label>
                                 <input type="password" class="form-control" id="password" name="password" 
-                                       minlength="4" required>
+                                       minlength="4" required placeholder="Ingrese la contraseña">
                                 <div class="form-text">Mínimo 4 caracteres</div>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -60,10 +62,11 @@ include_once 'layouts/header.php';
                                     <option value="1" selected>Activo</option>
                                     <option value="0">Inactivo</option>
                                 </select>
+                                <div class="form-text">El usuario inactivo no podrá iniciar sesión</div>
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="index.php?controller=usuarios&action=index" class="btn btn-secondary me-md-2">
                                 <i class="fas fa-times fa-fw"></i> Cancelar
                             </a>
