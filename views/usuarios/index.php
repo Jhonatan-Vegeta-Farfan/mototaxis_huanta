@@ -1,11 +1,6 @@
 <?php
 $pageTitle = "Gestión de Usuarios - Sistema Mototaxis Huanta";
 include_once 'views/layouts/header.php';
-
-// Obtener lista de usuarios
-$query = "SELECT * FROM usuarios ORDER BY id ASC";
-$stmt = $conn->prepare($query);
-$stmt->execute();
 ?>
 
 <div class="container-fluid py-4">
