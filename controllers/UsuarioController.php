@@ -28,7 +28,7 @@ class UsuarioController {
             $this->model->nombre = trim($_POST['nombre']);
             $this->model->usuario = trim($_POST['usuario']);
             $this->model->password = trim($_POST['password']);
-            $this->model->estado = 1;
+            $this->model->estado = isset($_POST['estado']) ? 1 : 0;
 
             // Validaciones
             if (empty($this->model->nombre)) {
@@ -37,14 +37,17 @@ class UsuarioController {
                 $error = 'El usuario es obligatorio';
             } elseif (empty($this->model->password)) {
                 $error = 'La contraseña es obligatoria';
+            } elseif (strlen($this->model->password) < 6) {
+                $error = 'La contraseña debe tener al menos 6 caracteres';
+            } elseif ($_POST['password'] !== $_POST['confirm_password']) {
+                $error = 'Las contraseñas no coinciden';
             } else {
                 // Validar usuario único
                 if ($this->model->usuarioExists($this->model->usuario)) {
                     $error = 'El usuario ya está registrado en el sistema';
                 } else {
                     if($this->model->create()) {
-                        $success = 'Usuario creado exitosamente';
-                        $_SESSION['success_message'] = $success;
+                        $_SESSION['success_message'] = 'Usuario creado exitosamente';
                         header("Location: index.php?controller=usuarios&action=index");
                         exit();
                     } else {
@@ -88,17 +91,25 @@ class UsuarioController {
                         // Obtener el usuario actual para mantener la contraseña
                         $current_user = $this->model->readOne();
                         if ($current_user) {
-                            $this->model->password = $this->model->password; // Mantener actual
+                            $this->model->password = ''; // Se mantendrá la actual en el modelo
+                        }
+                    } else {
+                        // Validar nueva contraseña
+                        if (strlen($this->model->password) < 6) {
+                            $error = 'La nueva contraseña debe tener al menos 6 caracteres';
+                        } elseif ($_POST['password'] !== $_POST['confirm_password']) {
+                            $error = 'Las contraseñas no coinciden';
                         }
                     }
                     
-                    if($this->model->update()) {
-                        $success = 'Usuario actualizado exitosamente';
-                        $_SESSION['success_message'] = $success;
-                        header("Location: index.php?controller=usuarios&action=index");
-                        exit();
-                    } else {
-                        $error = 'Error al actualizar el usuario';
+                    if (empty($error)) {
+                        if($this->model->update()) {
+                            $_SESSION['success_message'] = 'Usuario actualizado exitosamente';
+                            header("Location: index.php?controller=usuarios&action=index");
+                            exit();
+                        } else {
+                            $error = 'Error al actualizar el usuario';
+                        }
                     }
                 }
             }
@@ -115,7 +126,7 @@ class UsuarioController {
     }
 
     /**
-     * Eliminar usuario (eliminación lógica)
+     * Eliminar usuario (eliminación física)
      */
     public function delete() {
         $this->model->id = intval($_GET['id']);
@@ -141,14 +152,22 @@ class UsuarioController {
         $this->model->id = intval($_GET['id']);
         
         if($this->model->readOne()) {
-            $nuevoEstado = $this->model->estado == 1 ? 0 : 1;
-            $this->model->estado = $nuevoEstado;
-            
-            if($this->model->update()) {
-                $estadoTexto = $nuevoEstado == 1 ? 'activado' : 'desactivado';
-                $_SESSION['success_message'] = "Usuario {$estadoTexto} exitosamente";
-            } else {
-                $_SESSION['error_message'] = 'Error al cambiar el estado del usuario';
+            try {
+                if($this->model->toggleStatus()) {
+                    $estadoTexto = $this->model->estado == 1 ? 'activado' : 'desactivado';
+                    $_SESSION['success_message'] = "Usuario {$estadoTexto} exitosamente";
+                    
+                    // Si el usuario desactivado es el mismo que está en sesión, cerrar sesión
+                    if ($this->model->id == $_SESSION['user_id'] && $this->model->estado == 0) {
+                        session_destroy();
+                        header("Location: login.php");
+                        exit();
+                    }
+                } else {
+                    $_SESSION['error_message'] = 'Error al cambiar el estado del usuario';
+                }
+            } catch (Exception $e) {
+                $_SESSION['error_message'] = $e->getMessage();
             }
         } else {
             $_SESSION['error_message'] = 'Usuario no encontrado';

@@ -1,20 +1,38 @@
 <?php
 session_start();
 
-// Verificar si el usuario está logueado (solo para admin)
+// Verificar si el usuario está logueado Y ACTIVO
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit;
 }
 
-// Incluir modelos
+// Verificar estado del usuario en la base de datos
 require_once 'models/Database.php';
+require_once 'models/Usuario.php';
+
+$database = new Database();
+$db = $database->getConnection();
+
+if ($db) {
+    $usuarioModel = new Usuario($db);
+    $userActive = $usuarioModel->checkUserStatus($_SESSION['user_id']);
+    
+    if (!$userActive) {
+        // Usuario desactivado, cerrar sesión
+        session_destroy();
+        $_SESSION['error_message'] = 'Su cuenta ha sido desactivada';
+        header("Location: login.php");
+        exit;
+    }
+}
+
+// Incluir otros modelos
 require_once 'models/ClientApi.php';
 require_once 'models/TokenApi.php';
 require_once 'models/CountRequest.php';
 require_once 'models/Empresa.php';
 require_once 'models/Mototaxi.php';
-require_once 'models/Usuario.php';
 
 // Incluir controladores
 require_once 'controllers/ClientApiController.php';
@@ -23,10 +41,6 @@ require_once 'controllers/CountRequestController.php';
 require_once 'controllers/EmpresaController.php';
 require_once 'controllers/MototaxiController.php';
 require_once 'controllers/UsuarioController.php';
-
-// Conexión a la base de datos
-$database = new Database();
-$db = $database->getConnection();
 
 // Verificar conexión a la base de datos
 if (!$db) {
