@@ -169,33 +169,6 @@ include_once 'layouts/header.php';
     </div>
 </div>
 
-<style>
-.card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-
-.form-control:focus {
-    border-color: #1e3c72;
-    box-shadow: 0 0 0 0.2rem rgba(30, 60, 114, 0.25);
-}
-
-.btn {
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.alert {
-    border-radius: 10px;
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle para mostrar/ocultar contraseña
@@ -228,14 +201,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Validar que las contraseñas coincidan
         if (password !== confirmPassword) {
             isValid = false;
-            alert('Las contraseñas no coinciden. Por favor, verifique.');
+            showNotification('error', 'Error', 'Las contraseñas no coinciden. Por favor, verifique.');
             confirmPasswordField.focus();
         }
 
         // Validar longitud mínima de contraseña
         if (password.length < 4) {
             isValid = false;
-            alert('La contraseña debe tener al menos 4 caracteres.');
+            showNotification('error', 'Error', 'La contraseña debe tener al menos 4 caracteres.');
             passwordField.focus();
         }
 

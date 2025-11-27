@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Gestión de Usuarios - Sistema Mototaxis Huanta";
-include_once 'views/layouts/header.php';
+include_once 'layouts/header.php';
 ?>
 
 <div class="container-fluid py-4">
@@ -26,25 +26,8 @@ include_once 'views/layouts/header.php';
                 </div>
 
                 <div class="card-body">
-                    <!-- Mostrar mensajes de sesión -->
-                    <?php if (isset($_SESSION['success_message'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <?php echo $_SESSION['success_message']; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    <?php unset($_SESSION['success_message']); endif; ?>
-
-                    <?php if (isset($_SESSION['error_message'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <?php echo $_SESSION['error_message']; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    <?php unset($_SESSION['error_message']); endif; ?>
-
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped" id="tablaUsuarios">
+                        <table class="table table-hover table-striped data-table" id="tablaUsuarios">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -56,7 +39,10 @@ include_once 'views/layouts/header.php';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
+                                <?php 
+                                $stmt->execute();
+                                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): 
+                                ?>
                                 <tr>
                                     <td><?php echo $row['id']; ?></td>
                                     <td><?php echo htmlspecialchars($row['nombre']); ?></td>
@@ -121,17 +107,4 @@ include_once 'views/layouts/header.php';
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    $('#tablaUsuarios').DataTable({
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-        },
-        order: [[0, 'desc']],
-        pageLength: 10,
-        responsive: true
-    });
-});
-</script>
-
-<?php include_once 'views/layouts/footer.php'; ?>
+<?php include_once 'layouts/footer.php'; ?>

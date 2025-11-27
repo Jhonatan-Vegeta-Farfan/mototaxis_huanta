@@ -288,39 +288,6 @@ include_once 'layouts/header.php';
     </div>
 </div>
 
-<style>
-.card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.btn {
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.border.rounded {
-    transition: all 0.3s ease;
-}
-
-.border.rounded:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Efectos de hover para las tarjetas de estadísticas
