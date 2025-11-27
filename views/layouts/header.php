@@ -31,11 +31,202 @@ if (isset($_SERVER['SCRIPT_NAME'])) {
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    
     <!-- Estilos personalizados -->
     <link href="<?php echo $basePath; ?>/assets/css/styles.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #1e3c72;
+            --secondary-blue: #2a5298;
+            --accent-blue: #0f3a4a;
+            --light-blue: #e3f2fd;
+            --dark-blue: #0d1b2a;
+            --success-green: #198754;
+            --warning-orange: #fd7e14;
+            --danger-red: #dc3545;
+            --info-cyan: #0dcaf0;
+            --white: #ffffff;
+            --gray: #6b7280;
+            --light-gray: #9ca3af;
+            --dark-gray: #374151;
+            --border-color: #dee2e6;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+        
+        /* Header Corporativo */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            border-bottom: 3px solid var(--accent-blue);
+            box-shadow: 0 4px 20px rgba(30, 60, 114, 0.3);
+            padding: 0.8rem 0;
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+        
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .navbar-brand-section {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .logo-img {
+            height: 45px;
+            width: auto;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo-img:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--white) !important;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-item {
+            margin: 0 2px;
+        }
+        
+        .nav-link {
+            color: var(--white) !important;
+            font-weight: 500;
+            padding: 0.6rem 1rem !important;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+        
+        .navbar-toggler {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.3rem 0.6rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Asegurar que el contenido no se solape con el header fijo */
+        .main-content {
+            min-height: calc(100vh - 80px);
+            padding: 20px 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+                border-radius: 0 0 8px 8px;
+                padding: 1rem;
+                margin-top: 0.5rem;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-item {
+                margin: 2px 0;
+                width: 100%;
+            }
+            
+            .nav-link {
+                padding: 0.8rem 1rem !important;
+                margin: 2px 0;
+                justify-content: flex-start;
+            }
+            
+            .navbar-nav {
+                width: 100%;
+            }
+            
+            body {
+                padding-top: 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .logo-img {
+                height: 40px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .navbar-brand span {
+                display: none;
+            }
+            
+            .navbar-brand i {
+                margin-right: 0;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php if (!$isPublicPage): ?>
