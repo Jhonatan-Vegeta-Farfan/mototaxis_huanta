@@ -1,160 +1,176 @@
 <?php
-// controllers/UsuariosController.php
-class UsuariosController {
-    private $conn;
-    private $usuario;
+class UsuarioController {
+    private $model;
+    private $db;
 
     public function __construct($db) {
-        $this->conn = $db;
-        $this->usuario = new Usuario($db);
+        $this->model = new Usuario($db);
+        $this->db = $db;
     }
 
-    // Listar todos los usuarios
+    /**
+     * Mostrar lista de usuarios
+     */
     public function index() {
-        try {
-            $stmt = $this->usuario->read();
-            return $stmt;
-        } catch (Exception $e) {
-            throw new Exception("Error al obtener usuarios: " . $e->getMessage());
-        }
+        $stmt = $this->model->read();
+        $db_connection = $this->db;
+        include_once 'views/usuarios/index.php';
     }
 
-    // Mostrar formulario de creación
+    /**
+     * Mostrar formulario y procesar creación de nuevo usuario
+     */
     public function create() {
-        // Retorna datos vacíos para el formulario
-        return [
-            'id' => '',
-            'nombre' => '',
-            'usuario' => '',
-            'password' => '',
-            'estado' => 1
-        ];
-    }
+        $error = '';
+        $success = '';
+        
+        if($_POST) {
+            $this->model->nombre = trim($_POST['nombre']);
+            $this->model->usuario = trim($_POST['usuario']);
+            $this->model->password = trim($_POST['password']);
+            $this->model->estado = 1;
 
-    // Guardar nuevo usuario
-    public function store($data) {
-        try {
-            // Validar datos
-            if (empty($data['nombre']) || empty($data['usuario']) || empty($data['password'])) {
-                throw new Exception("Todos los campos son obligatorios");
-            }
-
-            // Verificar si el usuario ya existe
-            if ($this->usuario->usuarioExists($data['usuario'])) {
-                throw new Exception("El nombre de usuario ya está en uso");
-            }
-
-            $this->usuario->nombre = $data['nombre'];
-            $this->usuario->usuario = $data['usuario'];
-            $this->usuario->password = $data['password'];
-            $this->usuario->estado = isset($data['estado']) ? $data['estado'] : 1;
-
-            if ($this->usuario->create()) {
-                return true;
-            }
-            throw new Exception("Error al crear el usuario");
-            
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    // Mostrar usuario específico
-    public function show($id) {
-        try {
-            $this->usuario->id = $id;
-            if ($this->usuario->readOne()) {
-                return [
-                    'id' => $this->usuario->id,
-                    'nombre' => $this->usuario->nombre,
-                    'usuario' => $this->usuario->usuario,
-                    'password' => $this->usuario->password,
-                    'fecha_registro' => $this->usuario->fecha_registro,
-                    'estado' => $this->usuario->estado
-                ];
-            }
-            throw new Exception("Usuario no encontrado");
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    // Mostrar formulario de edición
-    public function edit($id) {
-        return $this->show($id);
-    }
-
-    // Actualizar usuario
-    public function update($id, $data) {
-        try {
-            // Validar datos
-            if (empty($data['nombre']) || empty($data['usuario'])) {
-                throw new Exception("Nombre y usuario son obligatorios");
-            }
-
-            // Verificar si el usuario ya existe (excluyendo el actual)
-            if ($this->usuario->usuarioExists($data['usuario'], $id)) {
-                throw new Exception("El nombre de usuario ya está en uso");
-            }
-
-            $this->usuario->id = $id;
-            $this->usuario->nombre = $data['nombre'];
-            $this->usuario->usuario = $data['usuario'];
-            
-            // Solo actualizar password si se proporcionó uno nuevo
-            if (!empty($data['password'])) {
-                $this->usuario->password = $data['password'];
+            // Validaciones
+            if (empty($this->model->nombre)) {
+                $error = 'El nombre es obligatorio';
+            } elseif (empty($this->model->usuario)) {
+                $error = 'El usuario es obligatorio';
+            } elseif (empty($this->model->password)) {
+                $error = 'La contraseña es obligatoria';
             } else {
-                // Mantener el password actual
-                $currentUser = $this->show($id);
-                $this->usuario->password = $currentUser['password'];
-            }
-            
-            $this->usuario->estado = $data['estado'];
-
-            if ($this->usuario->update()) {
-                return true;
-            }
-            throw new Exception("Error al actualizar el usuario");
-            
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    // Eliminar usuario
-    public function destroy($id) {
-        try {
-            $this->usuario->id = $id;
-            if ($this->usuario->delete()) {
-                return true;
-            }
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    // Cambiar estado del usuario
-    public function toggleStatus($id) {
-        try {
-            $user = $this->show($id);
-            $this->usuario->id = $id;
-            
-            if ($user['estado'] == 1) {
-                // Desactivar usuario
-                if ($this->usuario->delete()) {
-                    return true;
-                }
-            } else {
-                // Activar usuario
-                if ($this->usuario->activate()) {
-                    return true;
+                // Validar usuario único
+                if ($this->model->usuarioExists($this->model->usuario)) {
+                    $error = 'El usuario ya está registrado en el sistema';
+                } else {
+                    if($this->model->create()) {
+                        $success = 'Usuario creado exitosamente';
+                        $_SESSION['success_message'] = $success;
+                        header("Location: index.php?controller=usuarios&action=index");
+                        exit();
+                    } else {
+                        $error = 'Error al crear el usuario';
+                    }
                 }
             }
-            throw new Exception("Error al cambiar el estado del usuario");
-            
+        }
+        
+        $db_connection = $this->db;
+        include_once 'views/usuarios/create.php';
+    }
+
+    /**
+     * Mostrar formulario y procesar edición de usuario
+     */
+    public function edit() {
+        $this->model->id = intval($_GET['id']);
+        $error = '';
+        $success = '';
+        
+        if($_POST) {
+            $this->model->id = intval($_POST['id']);
+            $this->model->nombre = trim($_POST['nombre']);
+            $this->model->usuario = trim($_POST['usuario']);
+            $this->model->password = trim($_POST['password']);
+            $this->model->estado = intval($_POST['estado']);
+
+            // Validaciones
+            if (empty($this->model->nombre)) {
+                $error = 'El nombre es obligatorio';
+            } elseif (empty($this->model->usuario)) {
+                $error = 'El usuario es obligatorio';
+            } else {
+                // Validar usuario único excluyendo el actual
+                if ($this->model->usuarioExists($this->model->usuario, $this->model->id)) {
+                    $error = 'El usuario ya está registrado en el sistema por otro usuario';
+                } else {
+                    // Si la contraseña está vacía, mantener la actual
+                    if (empty($this->model->password)) {
+                        // Obtener el usuario actual para mantener la contraseña
+                        $current_user = $this->model->readOne();
+                        if ($current_user) {
+                            $this->model->password = $this->model->password; // Mantener actual
+                        }
+                    }
+                    
+                    if($this->model->update()) {
+                        $success = 'Usuario actualizado exitosamente';
+                        $_SESSION['success_message'] = $success;
+                        header("Location: index.php?controller=usuarios&action=index");
+                        exit();
+                    } else {
+                        $error = 'Error al actualizar el usuario';
+                    }
+                }
+            }
+        } else {
+            if (!$this->model->readOne()) {
+                $_SESSION['error_message'] = 'Usuario no encontrado';
+                header("Location: index.php?controller=usuarios&action=index");
+                exit();
+            }
+        }
+        
+        $db_connection = $this->db;
+        include_once 'views/usuarios/edit.php';
+    }
+
+    /**
+     * Eliminar usuario (eliminación lógica)
+     */
+    public function delete() {
+        $this->model->id = intval($_GET['id']);
+        
+        try {
+            if($this->model->delete()) {
+                $_SESSION['success_message'] = 'Usuario eliminado exitosamente';
+            } else {
+                $_SESSION['error_message'] = 'Error al eliminar el usuario';
+            }
         } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+            $_SESSION['error_message'] = $e->getMessage();
+        }
+        
+        header("Location: index.php?controller=usuarios&action=index");
+        exit();
+    }
+
+    /**
+     * Activar/Desactivar usuario
+     */
+    public function toggleStatus() {
+        $this->model->id = intval($_GET['id']);
+        
+        if($this->model->readOne()) {
+            $nuevoEstado = $this->model->estado == 1 ? 0 : 1;
+            $this->model->estado = $nuevoEstado;
+            
+            if($this->model->update()) {
+                $estadoTexto = $nuevoEstado == 1 ? 'activado' : 'desactivado';
+                $_SESSION['success_message'] = "Usuario {$estadoTexto} exitosamente";
+            } else {
+                $_SESSION['error_message'] = 'Error al cambiar el estado del usuario';
+            }
+        } else {
+            $_SESSION['error_message'] = 'Usuario no encontrado';
+        }
+        
+        header("Location: index.php?controller=usuarios&action=index");
+        exit();
+    }
+
+    /**
+     * Mostrar detalles de un usuario específico
+     */
+    public function view() {
+        $this->model->id = intval($_GET['id']);
+        
+        if($this->model->readOne()) {
+            $db_connection = $this->db;
+            include_once 'views/usuarios/view.php';
+        } else {
+            $_SESSION['error_message'] = 'Usuario no encontrado';
+            header("Location: index.php?controller=usuarios&action=index");
+            exit();
         }
     }
 }
