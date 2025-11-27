@@ -1,115 +1,107 @@
 <?php
-$pageTitle = "Editar Usuario - Sistema Mototaxis";
-include_once 'layouts/header.php';
+// views/usuarios/form.php
+$pageTitle = isset($usuario['id']) ? "Editar Usuario" : "Crear Usuario";
+include_once 'views/layouts/header.php';
 ?>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-user-edit fa-fw"></i> Editar Usuario
-            </h1>
-            <p class="text-muted">Actualice los datos del usuario</p>
-        </div>
-        <a href="index.php?controller=usuarios&action=index" class="btn btn-secondary">
-            <i class="fas fa-arrow-left fa-fw"></i> Volver
-        </a>
-    </div>
-
+<div class="container-fluid py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3" style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border-radius: 10px 10px 0 0;">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-user-circle fa-fw"></i> Datos del Usuario
-                    </h6>
-                </div>
-                <div class="card-body" style="padding: 2rem;">
-                    <?php if (!empty($error)): ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 10px; border: none;">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <?php echo htmlspecialchars($error); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user me-2"></i>
+                                <?php echo isset($usuario['id']) ? 'Editar Usuario' : 'Crear Nuevo Usuario'; ?>
+                            </h4>
                         </div>
+                        <div class="col-auto">
+                            <a href="index.php?controller=usuarios&action=index" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Mostrar mensajes de error -->
+                    <?php if (isset($error_message)): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <?php echo $error_message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="index.php?controller=usuarios&action=edit&id=<?php echo $this->model->id; ?>">
-                        <input type="hidden" name="id" value="<?php echo $this->model->id; ?>">
+                    <form action="index.php?controller=usuarios&action=<?php echo isset($usuario['id']) ? 'update&id=' . $usuario['id'] : 'store'; ?>" 
+                          method="POST" id="usuarioForm">
                         
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="nombre" class="form-label" style="font-weight: 600; color: #1e3c72;">
-                                    <i class="fas fa-user me-1"></i> Nombre Completo *
-                                </label>
+                            <div class="col-md-12 mb-3">
+                                <label for="nombre" class="form-label">Nombre Completo *</label>
                                 <input type="text" class="form-control" id="nombre" name="nombre" 
-                                       value="<?php echo htmlspecialchars($this->model->nombre); ?>" 
-                                       required placeholder="Ingrese el nombre completo"
-                                       style="border-radius: 8px; padding: 10px; border: 2px solid #dee2e6;">
-                                <div class="form-text" style="color: #6c757d; font-size: 0.85rem;">
-                                    <small>Ej: Juan Pérez García</small>
-                                </div>
+                                       value="<?php echo htmlspecialchars($usuario['nombre'] ?? ''); ?>" 
+                                       required>
+                                <div class="form-text">Ingrese el nombre completo del usuario.</div>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="usuario" class="form-label" style="font-weight: 600; color: #1e3c72;">
-                                    <i class="fas fa-at me-1"></i> Usuario *
-                                </label>
+                                <label for="usuario" class="form-label">Nombre de Usuario *</label>
                                 <input type="text" class="form-control" id="usuario" name="usuario" 
-                                       value="<?php echo htmlspecialchars($this->model->usuario); ?>" 
-                                       required placeholder="Ingrese el nombre de usuario"
-                                       style="border-radius: 8px; padding: 10px; border: 2px solid #dee2e6;">
-                                <div class="form-text" style="color: #6c757d; font-size: 0.85rem;">
-                                    <small>Mínimo 3 caracteres</small>
+                                       value="<?php echo htmlspecialchars($usuario['usuario'] ?? ''); ?>" 
+                                       required>
+                                <div class="form-text">El nombre de usuario debe ser único.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">
+                                    Contraseña <?php echo !isset($usuario['id']) ? '*' : ''; ?>
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       <?php echo !isset($usuario['id']) ? 'required' : ''; ?>>
+                                <div class="form-text">
+                                    <?php echo isset($usuario['id']) ? 
+                                        'Dejar en blanco para mantener la contraseña actual.' : 
+                                        'La contraseña se almacena en texto plano.'; ?>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="password" class="form-label" style="font-weight: 600; color: #1e3c72;">
-                                    <i class="fas fa-lock me-1"></i> Contraseña
-                                </label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" 
-                                           minlength="4" placeholder="Dejar vacío para mantener la actual"
-                                           style="border-radius: 8px 0 0 8px; padding: 10px; border: 2px solid #dee2e6;">
-                                    <button type="button" class="btn btn-outline-secondary" id="togglePassword"
-                                            style="border-radius: 0 8px 8px 0; border: 2px solid #dee2e6;">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                <div class="form-text" style="color: #6c757d; font-size: 0.85rem;">
-                                    <small>Mínimo 4 caracteres. Dejar vacío para no cambiar.</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="estado" class="form-label" style="font-weight: 600; color: #1e3c72;">
-                                    <i class="fas fa-toggle-on me-1"></i> Estado *
-                                </label>
-                                <select class="form-control" id="estado" name="estado" required
-                                        style="border-radius: 8px; padding: 10px; border: 2px solid #dee2e6;">
-                                    <option value="1" <?php echo $this->model->estado == 1 ? 'selected' : ''; ?>>Activo</option>
-                                    <option value="0" <?php echo $this->model->estado == 0 ? 'selected' : ''; ?>>Inactivo</option>
+                                <label for="estado" class="form-label">Estado</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="1" <?php echo (isset($usuario['estado']) && $usuario['estado'] == 1) ? 'selected' : ''; ?>>Activo</option>
+                                    <option value="0" <?php echo (isset($usuario['estado']) && $usuario['estado'] == 0) ? 'selected' : ''; ?>>Inactivo</option>
                                 </select>
-                                <div class="form-text" style="color: #6c757d; font-size: 0.85rem;">
-                                    <small>El usuario inactivo no podrá iniciar sesión</small>
-                                </div>
+                                <div class="form-text">Estado actual del usuario en el sistema.</div>
                             </div>
+                            
+                            <?php if (isset($usuario['id'])): ?>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de Registro</label>
+                                <input type="text" class="form-control" 
+                                       value="<?php echo date('d/m/Y H:i', strtotime($usuario['fecha_registro'])); ?>" 
+                                       readonly>
+                                <div class="form-text">Fecha en que se registró el usuario.</div>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Los campos marcados con * son obligatorios
-                            </small>
-                            <div>
-                                <a href="index.php?controller=usuarios&action=index" class="btn btn-secondary me-2"
-                                   style="border-radius: 8px; padding: 10px 20px;">
-                                    <i class="fas fa-times fa-fw me-1"></i> Cancelar
-                                </a>
-                                <button type="submit" class="btn btn-primary" id="btnSubmit"
-                                        style="border-radius: 8px; padding: 10px 20px; background: linear-gradient(135deg, #1e3c72, #2a5298); border: none;">
-                                    <i class="fas fa-save fa-fw me-1"></i> Actualizar Usuario
-                                </button>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="index.php?controller=usuarios&action=index" class="btn btn-secondary me-md-2">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        <?php echo isset($usuario['id']) ? 'Actualizar Usuario' : 'Crear Usuario'; ?>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -120,20 +112,56 @@ include_once 'layouts/header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle para mostrar/ocultar contraseña
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('password');
+$(document).ready(function() {
+    // Validación del formulario
+    $('#usuarioForm').on('submit', function(e) {
+        let isValid = true;
+        const nombre = $('#nombre').val().trim();
+        const usuario = $('#usuario').val().trim();
+        const password = $('#password').val();
 
-    togglePassword.addEventListener('click', function() {
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        // Validar campos requeridos
+        if (nombre === '') {
+            showValidationError('nombre', 'El nombre es obligatorio');
+            isValid = false;
+        } else {
+            clearValidationError('nombre');
+        }
+
+        if (usuario === '') {
+            showValidationError('usuario', 'El nombre de usuario es obligatorio');
+            isValid = false;
+        } else {
+            clearValidationError('usuario');
+        }
+
+        <?php if (!isset($usuario['id'])): ?>
+        if (password === '') {
+            showValidationError('password', 'La contraseña es obligatoria');
+            isValid = false;
+        } else {
+            clearValidationError('password');
+        }
+        <?php endif; ?>
+
+        if (!isValid) {
+            e.preventDefault();
+            showNotification('error', 'Por favor, complete todos los campos obligatorios.');
+        }
     });
 
-    // Auto-focus en el primer campo
-    document.getElementById('nombre').focus();
+    function showValidationError(fieldId, message) {
+        const field = $('#' + fieldId);
+        field.addClass('is-invalid');
+        field.next('.form-text').after(`<div class="invalid-feedback">${message}</div>`);
+    }
+
+    function clearValidationError(fieldId) {
+        const field = $('#' + fieldId);
+        field.removeClass('is-invalid');
+        field.next('.form-text').next('.invalid-feedback').remove();
+    }
 });
 </script>
 
-<?php include_once 'layouts/footer.php'; ?>
+<?php include_once 'views/layouts/footer.php'; ?>
