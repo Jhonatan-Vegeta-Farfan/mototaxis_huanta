@@ -19,40 +19,40 @@ if ($_POST) {
     $db = $database->getConnection();
     
     if ($db) {
-        $usuarioModel = new Usuario($db);
+        // Consultar usuario en la base de datos (sin la columna estado)
+        $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
+        $stmt = $db->prepare($query);
         
-        if ($usuarioModel->login($username, $password)) {
-            $_SESSION['loggedin'] = true;
-            $_SESSION['username'] = $usuarioModel->usuario;
-            $_SESSION['user_id'] = $usuarioModel->id;
-            $_SESSION['user_nombre'] = $usuarioModel->nombre;
-            
-            header("Location: index.php");
-            exit;
-        } else {
-            // Verificar si el usuario existe pero está inactivo
-            $query = "SELECT estado FROM usuarios WHERE usuario = ? LIMIT 1";
-            $stmt = $db->prepare($query);
+        if ($stmt) {
             $stmt->bindParam(1, $username);
             $stmt->execute();
             
             if ($stmt->rowCount() == 1) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($user['estado'] == 0) {
-                    $error = 'Usuario desactivado. Contacte al administrador.';
+                
+                // Verificar contraseña (en texto plano según la base de datos)
+                if ($password === $user['password']) {
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['username'] = $user['usuario'];
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nombre'] = $user['nombre'];
+                    
+                    header("Location: index.php");
+                    exit;
                 } else {
                     $error = 'Usuario o contraseña incorrectos';
                 }
             } else {
-                $error = 'Usuario o contraseña incorrectos';
+                $error = 'Usuario no encontrado';
             }
+        } else {
+            $error = 'Error en la consulta de base de datos';
         }
     } else {
         $error = 'Error de conexión a la base de datos';
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,7 +62,6 @@ if ($_POST) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Estilos del login (mantener igual) */
         :root {
             --primary-black: #1a1a1a;
             --dark-black: #0d0d0d;
@@ -208,9 +207,54 @@ if ($_POST) {
             border-radius: 10px;
             border: none;
         }
+        
+        .particle {
+            position: absolute;
+            background: var(--primary-turquoise);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 6s infinite ease-in-out;
+            z-index: 0;
+        }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) rotate(0deg); 
+            }
+            50% { 
+                transform: translateY(-20px) rotate(180deg); 
+            }
+        }
+        
+        .credential-info {
+            background: rgba(64, 224, 208, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            border-left: 3px solid var(--primary-turquoise);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .credential-info h6 {
+            color: var(--primary-turquoise);
+            margin-bottom: 10px;
+        }
+
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
+    <!-- Partículas de fondo -->
+    <div class="bg-particles"></div>
+    
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
@@ -266,6 +310,29 @@ if ($_POST) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Efectos de partículas
+        function createParticles() {
+            const container = document.querySelector('.bg-particles');
+            if (!container) return;
+
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 8 + 4;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                particle.style.background = i % 2 === 0 ? 
+                    'linear-gradient(45deg, #40e0d0, #2a9d8f)' : 
+                    'linear-gradient(45deg, #2a9d8f, #40e0d0)';
+                
+                container.appendChild(particle);
+            }
+        }
+
         // Mostrar/ocultar contraseña
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
@@ -282,6 +349,7 @@ if ($_POST) {
 
         // Auto-focus en el campo de usuario
         document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
             document.getElementById('username').focus();
         });
     </script>
