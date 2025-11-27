@@ -28,7 +28,7 @@ class UsuarioController {
             $this->model->nombre = trim($_POST['nombre']);
             $this->model->usuario = trim($_POST['usuario']);
             $this->model->password = trim($_POST['password']);
-            $this->model->estado = intval($_POST['estado']);
+            $this->model->estado = 1;
 
             // Validaciones
             if (empty($this->model->nombre)) {
@@ -37,8 +37,6 @@ class UsuarioController {
                 $error = 'El usuario es obligatorio';
             } elseif (empty($this->model->password)) {
                 $error = 'La contraseña es obligatoria';
-            } elseif (strlen($this->model->password) < 4) {
-                $error = 'La contraseña debe tener al menos 4 caracteres';
             } else {
                 // Validar usuario único
                 if ($this->model->usuarioExists($this->model->usuario)) {
@@ -81,31 +79,26 @@ class UsuarioController {
             } elseif (empty($this->model->usuario)) {
                 $error = 'El usuario es obligatorio';
             } else {
-                // Si se proporcionó nueva contraseña, validarla
-                if (!empty($this->model->password) && strlen($this->model->password) < 4) {
-                    $error = 'La contraseña debe tener al menos 4 caracteres';
+                // Validar usuario único excluyendo el actual
+                if ($this->model->usuarioExists($this->model->usuario, $this->model->id)) {
+                    $error = 'El usuario ya está registrado en el sistema por otro usuario';
                 } else {
-                    // Validar usuario único excluyendo el actual
-                    if ($this->model->usuarioExists($this->model->usuario, $this->model->id)) {
-                        $error = 'El usuario ya está registrado en el sistema por otro usuario';
+                    // Si la contraseña está vacía, mantener la actual
+                    if (empty($this->model->password)) {
+                        // Obtener el usuario actual para mantener la contraseña
+                        $current_user = $this->model->readOne();
+                        if ($current_user) {
+                            $this->model->password = $this->model->password; // Mantener actual
+                        }
+                    }
+                    
+                    if($this->model->update()) {
+                        $success = 'Usuario actualizado exitosamente';
+                        $_SESSION['success_message'] = $success;
+                        header("Location: index.php?controller=usuarios&action=index");
+                        exit();
                     } else {
-                        // Si no se proporcionó nueva contraseña, mantener la actual
-                        if (empty($this->model->password)) {
-                            $current_user = new Usuario($this->db);
-                            $current_user->id = $this->model->id;
-                            if ($current_user->readOne()) {
-                                $this->model->password = $current_user->password;
-                            }
-                        }
-                        
-                        if($this->model->update()) {
-                            $success = 'Usuario actualizado exitosamente';
-                            $_SESSION['success_message'] = $success;
-                            header("Location: index.php?controller=usuarios&action=index");
-                            exit();
-                        } else {
-                            $error = 'Error al actualizar el usuario';
-                        }
+                        $error = 'Error al actualizar el usuario';
                     }
                 }
             }

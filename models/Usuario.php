@@ -100,10 +100,6 @@ class Usuario {
         
         if($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
-            
-            // Reorganizar IDs después de crear
-            $this->reorganizarUsuarios();
-            
             return true;
         }
         return false;
@@ -138,12 +134,10 @@ class Usuario {
     }
 
     /**
-     * Eliminar usuario (eliminación lógica) y reorganizar
+     * Eliminar usuario (eliminación lógica)
      */
     public function delete() {
         try {
-            $this->conn->beginTransaction();
-            
             // No permitir eliminar el último usuario activo
             $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE estado = 1";
             $stmt = $this->conn->prepare($query);
@@ -162,84 +156,11 @@ class Usuario {
                 throw new Exception("Error al eliminar el usuario");
             }
             
-            // Reorganizar IDs de usuarios activos
-            $this->reorganizarUsuariosActivos();
-            
-            $this->conn->commit();
             return true;
             
         } catch (Exception $e) {
-            $this->conn->rollBack();
             error_log("Error en delete: " . $e->getMessage());
             throw new Exception($e->getMessage());
-        }
-    }
-
-    /**
-     * Reorganizar IDs de usuarios activos
-     */
-    private function reorganizarUsuariosActivos() {
-        try {
-            // 1. Obtener todos los usuarios activos ordenados por ID actual
-            $query = "SELECT id FROM " . $this->table_name . " WHERE estado = 1 ORDER BY id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // 2. Actualizar IDs secuencialmente
-            $new_id = 1;
-            foreach ($usuarios as $usuario) {
-                if ($usuario['id'] != $new_id) {
-                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
-                    $update_stmt = $this->conn->prepare($update_query);
-                    $update_stmt->bindParam(1, $new_id);
-                    $update_stmt->bindParam(2, $usuario['id']);
-                    $update_stmt->execute();
-                }
-                $new_id++;
-            }
-            
-            return true;
-            
-        } catch (PDOException $e) {
-            error_log("Error reorganizando usuarios: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Reorganizar todos los usuarios
-     */
-    private function reorganizarUsuarios() {
-        try {
-            // 1. Obtener todos los usuarios ordenados por ID actual
-            $query = "SELECT id FROM " . $this->table_name . " ORDER BY id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // 2. Actualizar IDs secuencialmente
-            $new_id = 1;
-            foreach ($usuarios as $usuario) {
-                if ($usuario['id'] != $new_id) {
-                    $update_query = "UPDATE " . $this->table_name . " SET id = ? WHERE id = ?";
-                    $update_stmt = $this->conn->prepare($update_query);
-                    $update_stmt->bindParam(1, $new_id);
-                    $update_stmt->bindParam(2, $usuario['id']);
-                    $update_stmt->execute();
-                }
-                $new_id++;
-            }
-            
-            // 3. Resetear el auto_increment
-            $reset_query = "ALTER TABLE " . $this->table_name . " AUTO_INCREMENT = 1";
-            $this->conn->exec($reset_query);
-            
-            return true;
-            
-        } catch (PDOException $e) {
-            error_log("Error reorganizando usuarios: " . $e->getMessage());
-            return false;
         }
     }
 
@@ -252,8 +173,6 @@ class Usuario {
         $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
-            // Reorganizar después de activar
-            $this->reorganizarUsuariosActivos();
             return true;
         }
         return false;
@@ -275,13 +194,6 @@ class Usuario {
         $stmt->execute($params);
         
         return $stmt->rowCount() > 0;
-    }
-
-    /**
-     * Reorganizar todos los IDs de usuarios (método público para llamadas manuales)
-     */
-    public function reorganizarTodosLosIds() {
-        return $this->reorganizarUsuarios();
     }
 }
 ?>

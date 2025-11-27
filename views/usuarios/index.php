@@ -1,125 +1,137 @@
 <?php
-$pageTitle = "Gestión de Usuarios - Sistema Mototaxis";
-include_once 'layouts/header.php';
+$pageTitle = "Gestión de Usuarios - Sistema Mototaxis Huanta";
+include_once 'views/layouts/header.php';
 ?>
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-users fa-fw"></i> Gestión de Usuarios
-            </h1>
-            <p class="text-muted">Administre los usuarios del sistema</p>
-        </div>
-        <a href="index.php?controller=usuarios&action=create" class="btn btn-primary">
-            <i class="fas fa-plus-circle fa-fw"></i> Nuevo Usuario
-        </a>
-    </div>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0">
+                                <i class="fas fa-users me-2"></i>Gestión de Usuarios
+                            </h4>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="index.php?controller=usuarios&action=create" class="btn btn-light btn-sm">
+                                <i class="fas fa-plus me-1"></i>Nuevo Usuario
+                            </a>
+                            <a href="index.php" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Volver al Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Alert Messages -->
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <?php echo $_SESSION['success_message']; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['success_message']); ?>
-    <?php endif; ?>
+                <div class="card-body">
+                    <!-- Mostrar mensajes de sesión -->
+                    <?php if (isset($_SESSION['success_message'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?php echo $_SESSION['success_message']; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php unset($_SESSION['success_message']); endif; ?>
 
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <?php echo $_SESSION['error_message']; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['error_message']); ?>
-    <?php endif; ?>
+                    <?php if (isset($_SESSION['error_message'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <?php echo $_SESSION['error_message']; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php unset($_SESSION['error_message']); endif; ?>
 
-    <!-- Users Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-list fa-fw"></i> Lista de Usuarios
-            </h6>
-            <span class="badge bg-primary">Total: <?php echo $stmt->rowCount(); ?> usuarios</span>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Usuario</th>
-                            <th>Fecha Registro</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
-                        <tr class="user-row">
-                            <td class="fw-bold"><?php echo htmlspecialchars($row['id']); ?></td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="user-avatar-small">
-                                        <?php echo strtoupper(substr($row['nombre'], 0, 1)); ?>
-                                    </div>
-                                    <span class="ms-2"><?php echo htmlspecialchars($row['nombre']); ?></span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="user-username"><?php echo htmlspecialchars($row['usuario']); ?></span>
-                            </td>
-                            <td><?php echo htmlspecialchars($row['fecha_registro']); ?></td>
-                            <td>
-                                <?php if ($row['estado'] == 1): ?>
-                                    <span class="badge bg-success user-status-active">
-                                        <i class="fas fa-check-circle me-1"></i>Activo
-                                    </span>
-                                <?php else: ?>
-                                    <span class="badge bg-danger user-status-inactive">
-                                        <i class="fas fa-times-circle me-1"></i>Inactivo
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="index.php?controller=usuarios&action=view&id=<?php echo $row['id']; ?>" 
-                                       class="btn btn-info btn-sm" title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="index.php?controller=usuarios&action=edit&id=<?php echo $row['id']; ?>" 
-                                       class="btn btn-warning btn-sm" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <?php if ($row['estado'] == 1): ?>
-                                        <a href="index.php?controller=usuarios&action=toggleStatus&id=<?php echo $row['id']; ?>" 
-                                           class="btn btn-secondary btn-sm" title="Desactivar">
-                                            <i class="fas fa-toggle-on"></i>
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="index.php?controller=usuarios&action=toggleStatus&id=<?php echo $row['id']; ?>" 
-                                           class="btn btn-success btn-sm" title="Activar">
-                                            <i class="fas fa-toggle-off"></i>
-                                        </a>
-                                    <?php endif; ?>
-                                    <a href="index.php?controller=usuarios&action=delete&id=<?php echo $row['id']; ?>" 
-                                       class="btn btn-danger btn-sm" 
-                                       onclick="return confirm('¿Está seguro de eliminar este usuario?')"
-                                       title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="tablaUsuarios">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
+                                <tr>
+                                    <td><?php echo $row['id']; ?></td>
+                                    <td><?php echo htmlspecialchars($row['nombre']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['usuario']); ?></td>
+                                    <td><?php echo date('d/m/Y H:i', strtotime($row['fecha_registro'])); ?></td>
+                                    <td>
+                                        <?php if ($row['estado'] == 1): ?>
+                                            <span class="badge bg-success">Activo</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="index.php?controller=usuarios&action=view&id=<?php echo $row['id']; ?>" 
+                                               class="btn btn-info" title="Ver">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="index.php?controller=usuarios&action=edit&id=<?php echo $row['id']; ?>" 
+                                               class="btn btn-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <?php if ($row['estado'] == 1): ?>
+                                                <a href="index.php?controller=usuarios&action=toggleStatus&id=<?php echo $row['id']; ?>" 
+                                                   class="btn btn-secondary" title="Desactivar"
+                                                   onclick="return confirm('¿Está seguro de desactivar este usuario?')">
+                                                    <i class="fas fa-toggle-on"></i>
+                                                </a>
+                                            <?php else: ?>
+                                                <a href="index.php?controller=usuarios&action=toggleStatus&id=<?php echo $row['id']; ?>" 
+                                                   class="btn btn-success" title="Activar"
+                                                   onclick="return confirm('¿Está seguro de activar este usuario?')">
+                                                    <i class="fas fa-toggle-off"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                            <a href="index.php?controller=usuarios&action=delete&id=<?php echo $row['id']; ?>" 
+                                               class="btn btn-danger" title="Eliminar"
+                                               onclick="return confirm('¿Está seguro de eliminar este usuario?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <?php if ($stmt->rowCount() == 0): ?>
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay usuarios registrados</h5>
+                        <p class="text-muted">Comience creando el primer usuario del sistema.</p>
+                        <a href="index.php?controller=usuarios&action=create" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Crear Primer Usuario
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<?php include_once 'layouts/footer.php'; ?>
+<script>
+$(document).ready(function() {
+    $('#tablaUsuarios').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        },
+        order: [[0, 'desc']],
+        pageLength: 10,
+        responsive: true
+    });
+});
+</script>
+
+<?php include_once 'views/layouts/footer.php'; ?>
