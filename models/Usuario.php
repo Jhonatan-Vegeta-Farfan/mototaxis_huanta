@@ -15,7 +15,7 @@ class Usuario {
     }
 
     /**
-     * Verificar credenciales de usuario CON VALIDACIÓN DE ESTADO
+     * Verificar credenciales de usuario
      */
     public function login($username, $password) {
         $query = "SELECT * FROM " . $this->table_name . " 
@@ -84,8 +84,7 @@ class Usuario {
      */
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-                 SET nombre=:nombre, usuario=:usuario, password=:password, 
-                     fecha_registro=NOW(), estado=:estado";
+                 SET nombre=:nombre, usuario=:usuario, password=:password, estado=:estado";
         
         $stmt = $this->conn->prepare($query);
         
@@ -110,33 +109,23 @@ class Usuario {
      * Actualizar usuario
      */
     public function update() {
-        // Si la contraseña está vacía, no actualizarla
-        if (empty($this->password)) {
-            $query = "UPDATE " . $this->table_name . " 
-                     SET nombre=:nombre, usuario=:usuario, estado=:estado
-                     WHERE id = :id";
-        } else {
-            $query = "UPDATE " . $this->table_name . " 
-                     SET nombre=:nombre, usuario=:usuario, password=:password, estado=:estado
-                     WHERE id = :id";
-        }
+        $query = "UPDATE " . $this->table_name . " 
+                 SET nombre=:nombre, usuario=:usuario, password=:password, estado=:estado
+                 WHERE id = :id";
         
         $stmt = $this->conn->prepare($query);
         
         $this->nombre = htmlspecialchars(strip_tags($this->nombre));
         $this->usuario = htmlspecialchars(strip_tags($this->usuario));
+        $this->password = htmlspecialchars(strip_tags($this->password));
         $this->estado = htmlspecialchars(strip_tags($this->estado));
         $this->id = htmlspecialchars(strip_tags($this->id));
         
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":usuario", $this->usuario);
+        $stmt->bindParam(":password", $this->password);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":id", $this->id);
-        
-        if (!empty($this->password)) {
-            $this->password = htmlspecialchars(strip_tags($this->password));
-            $stmt->bindParam(":password", $this->password);
-        }
         
         if($stmt->execute()) {
             return true;
@@ -176,29 +165,14 @@ class Usuario {
     }
 
     /**
-     * Activar/Desactivar usuario
+     * Activar usuario
      */
-    public function toggleStatus() {
-        // No permitir desactivar el último usuario activo
-        if ($this->estado == 1) {
-            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE estado = 1";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            $total_activos = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-            
-            if ($total_activos <= 1) {
-                throw new Exception("No se puede desactivar el último usuario activo del sistema");
-            }
-        }
-        
-        $nuevoEstado = $this->estado == 1 ? 0 : 1;
-        $query = "UPDATE " . $this->table_name . " SET estado = ? WHERE id = ?";
+    public function activate() {
+        $query = "UPDATE " . $this->table_name . " SET estado = 1 WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $nuevoEstado);
-        $stmt->bindParam(2, $this->id);
+        $stmt->bindParam(1, $this->id);
         
         if($stmt->execute()) {
-            $this->estado = $nuevoEstado;
             return true;
         }
         return false;
@@ -220,28 +194,6 @@ class Usuario {
         $stmt->execute($params);
         
         return $stmt->rowCount() > 0;
-    }
-
-    /**
-     * Obtener usuario por nombre de usuario
-     */
-    public function getByUsername($username) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE usuario = ? LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $username);
-        $stmt->execute();
-        
-        if ($stmt->rowCount() > 0) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $this->id = $row['id'];
-            $this->nombre = $row['nombre'];
-            $this->usuario = $row['usuario'];
-            $this->password = $row['password'];
-            $this->fecha_registro = $row['fecha_registro'];
-            $this->estado = $row['estado'];
-            return true;
-        }
-        return false;
     }
 }
 ?>

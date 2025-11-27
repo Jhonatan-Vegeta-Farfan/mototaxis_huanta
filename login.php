@@ -19,23 +19,34 @@ if ($_POST) {
     $db = $database->getConnection();
     
     if ($db) {
-        $usuario = new Usuario($db);
+        // Consultar usuario en la base de datos (sin la columna estado)
+        $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
+        $stmt = $db->prepare($query);
         
-        if ($usuario->login($username, $password)) {
-            // VERIFICAR QUE EL USUARIO ESTÉ ACTIVO
-            if ($usuario->estado == 1) {
-                $_SESSION['loggedin'] = true;
-                $_SESSION['username'] = $usuario->usuario;
-                $_SESSION['user_id'] = $usuario->id;
-                $_SESSION['user_nombre'] = $usuario->nombre;
+        if ($stmt) {
+            $stmt->bindParam(1, $username);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() == 1) {
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 
-                header("Location: index.php");
-                exit;
+                // Verificar contraseña (en texto plano según la base de datos)
+                if ($password === $user['password']) {
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['username'] = $user['usuario'];
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nombre'] = $user['nombre'];
+                    
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $error = 'Usuario o contraseña incorrectos';
+                }
             } else {
-                $error = 'Usuario desactivado. Contacte al administrador.';
+                $error = 'Usuario no encontrado';
             }
         } else {
-            $error = 'Usuario o contraseña incorrectos';
+            $error = 'Error en la consulta de base de datos';
         }
     } else {
         $error = 'Error de conexión a la base de datos';
@@ -291,19 +302,6 @@ if ($_POST) {
                                 <i class="fas fa-sign-in-alt me-2"></i>Ingresar al Sistema
                             </button>
                         </form>
-
-                        <!-- Información de usuarios de prueba -->
-                        <div class="credential-info mt-4">
-                            <h6><i class="fas fa-key me-2"></i>Usuarios del Sistema</h6>
-                            <div class="row">
-                                <div class="col-12">
-                                    <small class="text-info">
-                                        <strong>Usuario:</strong> admin | <strong>Contraseña:</strong> admin123<br>
-                                        <strong>Usuario:</strong> supervisor | <strong>Contraseña:</strong> super123
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
